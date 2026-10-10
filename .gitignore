@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 测试
+.pytest_cache/
+.coverage
+
+# 构建产物（索引可随时重建）
+data/index/
+
+# 真实语料不入库（样例数据 data/smoke 需要保留在版本库中）
+data/raw/
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+.DS_Store

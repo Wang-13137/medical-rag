@@ -1,0 +1,53 @@
+# 中文医疗知识库 RAG 系统 —— 全局配置
+# 所有可调参数集中在此，代码内不硬编码魔法数字。
+# 命令行 --data-dir / --index-path / --top-k 等可覆盖此处的值。
+
+project:
+  name: medical-rag
+  # 阶段标识：W1 = 解析 / 切片 / 向量化 / FAISS 检索基线
+  stage: W1
+
+paths:
+  # 真实知识库目录，由使用者自行放入 PDF / docx / txt / md
+  data_dir: data/raw
+  # 冒烟测试样本文档目录
+  smoke_data_dir: data/smoke
+  # FAISS 索引二进制文件
+  index_path: data/index/faiss_smoke.index
+  # 与索引配套的切片元数据（用于引用溯源）
+  meta_path: data/index/chunks_smoke.json
+
+chunking:
+  # 单个切片的最大字符数
+  chunk_size: 400
+  # 相邻切片重叠的字符数（必须小于 chunk_size）
+  chunk_overlap: 80
+  # 低于该字符数的尾部落料会被并入上一个切片
+  min_tail_chars: 30
+  # 命中这些规则的行被识别为小标题行
+  heading_max_chars: 60
+  # 是否把标题层级路径拼进切片正文（有利于检索召回）
+  prepend_heading_path: true
+
+embedding:
+  model_name: BAAI/bge-small-zh-v1.5
+  # cpu / cuda；本机无 GPU，固定 cpu
+  device: cpu
+  batch_size: 16
+  # L2 归一化后，FAISS IndexFlatIP 的内积即余弦相似度
+  normalize: true
+  max_seq_length: 512
+  # bge 官方推荐的检索侧指令前缀；文档侧不加前缀
+  query_instruction: "为这个句子生成表示以用于检索相关文章："
+  # 可选：已下载到本地的模型快照目录，填写后完全离线加载
+  local_model_dir: ""
+
+retrieval:
+  top_k: 5
+  # 低于该分数的结果在打印时给出提示（不参与过滤，仅提示）
+  score_floor: 0.3
+
+runtime:
+  # CPU 推理线程数，本机 12 核
+  num_threads: 12
+  show_progress_bar: true

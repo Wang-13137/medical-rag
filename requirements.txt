@@ -1,0 +1,30 @@
+# 中文医疗 RAG 系统 —— W1 阶段依赖
+# 全部安装到隔离 venv：python
+#   pip install -r requirements.txt
+# torch 走 CPU 版本，本机 12 核无 GPU，保持 torch==2.14.1+cpu 不变以避免重装大包。
+
+torch==2.14.1+cpu
+
+faiss-cpu==1.15.1
+sentence-transformers==6.1.0
+transformers==5.19.0
+tokenizers==0.23.3
+huggingface-hub==1.33.0
+modelscope==1.40.2          # 国内网络下用于下载 bge 模型的兜底方案
+
+numpy==2.5.3
+pandas==3.0.6
+scikit-learn==1.9.1
+PyYAML==6.0.3
+tqdm==4.70.1
+
+pdfplumber==0.11.10         # PDF 解析
+python-docx==1.2.0          # docx 解析
+rank_bm25==0.2.2            # W2 的 BM25 检索，本阶段先装好
+jieba==0.42.1               # W2 的中文分词，本阶段先装好
+
+pytest==9.1.1
+
+# 以下依赖在 W1 不安装，留待后续阶段：
+# gradio / fastapi / uvicorn  —— W4 的 Web 服务
+# sentence-transformers 的重排模型 bge-reranker-base —— W3 的重排
