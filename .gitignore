@@ -12,7 +12,9 @@ data/index/
 
 # 真实语料不入库（样例数据 data/smoke 需要保留在版本库中）
 data/raw/
-# 原始采集物（PDF/HTML）同样不入库，避免二次分发原文
+# 清洗后的派生语料同样不入库
+data/clean/
+# 原始采集物（PDF/HTML）同样不入库，避免二次分发指南原文
 data/source_original/
 
 # 编辑器

@@ -6,13 +6,15 @@
 指标：把答案里的关键实体（数值、药名、检查项）列出来，看定长上下文预算内能不能把这些实体全召回。
 
 公平性处理：
-    1. 关键串必须在对应指南正文中真实出现，脚本会先核验，未出现的自动剔除并打印；
-    2. 三档切片的检索条数按「等上下文预算」换算（round(budget / 该配置平均片长)），避免长切片
-       因为塞进更多文本而天然占便宜。
+    1. 关键串必须在语料正文中真实出现，脚本会先核验，未出现的自动剔除并打印；
+    2. 检索条数按「等上下文预算」换算（round(budget / 平均片长)），避免长切片因为塞进更多
+       文本而天然占便宜；
+    3. 纯向量与 BM25+向量混合共用同一个索引、同一批关键串、同一预算，唯一变量是召回方式。
 
 用法：
-    python scripts/eval_answer_recall.py                 # 默认预算 1200 字符，读 data/index 下三份索引
-    python scripts/eval_answer_recall.py --budget 900
+    python scripts/eval_answer_recall.py                          # 纯向量 vs 混合
+    python scripts/eval_answer_recall.py --budget 900             # 换上下文预算
+    python scripts/eval_answer_recall.py --index-tags clean_base  # 指定索引
 """
 
 from __future__ import annotations
@@ -35,9 +37,8 @@ import numpy as np
 
 from medical_rag.config import load_config
 from medical_rag.embedding import BGEEmbedder
+from medical_rag.hybrid import HybridRetriever
 from medical_rag.index import FaissIndex
-
-RAW_DIR = ROOT_DIR / "data" / "raw"
 
 # (query, 候选关键串)。关键串先核验是否出现在语料里，未出现的不计入。
 QUERIES: list[tuple[str, list[str]]] = [
@@ -53,12 +54,9 @@ QUERIES: list[tuple[str, list[str]]] = [
     ("基层医疗卫生机构2型糖尿病的筛查和转诊建议", ["空腹血糖", "OGTT", "糖化血红蛋白"]),
 ]
 
-CONFIGS = [(300, 60), (400, 80), (600, 120)]
 
-
-def build_corpus_index() -> dict[str, str]:
-    """把语料按文件名读进来，用于核验关键串是否真实存在。"""
-    return {p.name: p.read_text(encoding="utf-8", errors="ignore") for p in sorted(RAW_DIR.glob("*.txt"))}
+def load_corpus(corpus_dir: Path) -> dict[str, str]:
+    return {p.name: p.read_text(encoding="utf-8", errors="ignore") for p in sorted(corpus_dir.glob("*.txt"))}
 
 
 def verify_tokens(corpus: dict[str, str]) -> tuple[list[tuple[str, list[str]]], list[str]]:
@@ -72,19 +70,28 @@ def verify_tokens(corpus: dict[str, str]) -> tuple[list[tuple[str, list[str]]], 
     return kept, dropped
 
 
-def run_one(index: FaissIndex, embedder: BGEEmbedder, queries, top_n: int) -> dict:
-    full_hits, coverage = 0, []
+class VectorRetriever:
+    """最小的向量召回适配器：把 FaissIndex + embedder 包成 retrieve(query, top_k)。"""
+
+    def __init__(self, index: FaissIndex, embedder: BGEEmbedder):
+        self.index = index
+        self.embedder = embedder
+
+    def retrieve(self, query: str, top_k: int):
+        vec = np.asarray(self.embedder.encode_queries(query), dtype=np.float32).reshape(1, -1)
+        return list(self.index.search(vec, top_k=top_k)[0])
+
+
+def run_one(retriever, queries, top_n: int) -> dict:
+    """跑一遍全部 query，返回关键串全中率、平均覆盖率与逐条明细。"""
     per_query = []
     for query, tokens in queries:
         if not tokens:
             continue
-        vec = np.asarray(embedder.encode_queries(query), dtype=np.float32).reshape(1, -1)
-        hits = index.search(vec, top_k=top_n)[0]
+        hits = list(retriever.retrieve(query, top_k=top_n))
         ctx = "\n".join(h.chunk.text for h in hits)
         covered = [t for t in tokens if t in ctx]
         rate = len(covered) / len(tokens)
-        coverage.append(rate)
-        full_hits += 1 if rate == 1.0 else 0
         per_query.append(
             {
                 "query": query,
@@ -97,65 +104,88 @@ def run_one(index: FaissIndex, embedder: BGEEmbedder, queries, top_n: int) -> di
         )
     n = len(per_query)
     return {
-        "answer_recall": full_hits / n,
-        "token_coverage": float(np.mean(coverage)),
+        "answer_recall": sum(1 for q in per_query if q["coverage"] == 1.0) / n,
+        "token_coverage": float(np.mean([q["coverage"] for q in per_query])) if per_query else 0.0,
         "per_query": per_query,
     }
+
+
+def build_variants(index: FaissIndex, embedder: BGEEmbedder, cfg, index_dir: Path, tag: str, with_hybrid: bool):
+    variants = [("纯向量", VectorRetriever(index, embedder))]
+    if with_hybrid:
+        hybrid = HybridRetriever.from_index(
+            index,
+            embedder,
+            cache_path=index_dir / f"bm25_{tag}.pkl",
+            top_k=int(cfg.get("retrieval.top_k", 5)),
+            rrf_k=int(cfg.get("retrieval.hybrid.rrf_k", 60)),
+            candidate_multiplier=int(cfg.get("retrieval.hybrid.candidate_multiplier", 4)),
+            verbose=False,
+        )
+        variants.append(("BM25+向量RRF", hybrid))
+    return variants
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="答案关键串召回实验")
     parser.add_argument("--config", default=str(ROOT_DIR / "configs" / "config.yaml"))
+    parser.add_argument("--corpus-dir", default=None, help="核验关键串用的语料目录，默认取 paths.data_dir")
+    parser.add_argument("--index-dir", default=str(ROOT_DIR / "data" / "index"), help="索引所在目录")
+    parser.add_argument("--index-tags", nargs="*", default=["clean_base"], help="要评估的索引名（faiss_ 之后的部分）")
     parser.add_argument("--budget", type=int, default=1200, help="上下文预算（字符）")
     parser.add_argument("--top-n", type=int, default=None, help="强制指定检索条数，覆盖预算换算")
+    parser.add_argument("--no-hybrid", action="store_true", help="只跑纯向量")
     parser.add_argument("--out", default=str(ROOT_DIR / "reports" / "answer_recall_eval.json"))
     args = parser.parse_args()
 
-    embedder = BGEEmbedder.from_config(load_config(args.config), verbose=False)
-    corpus = build_corpus_index()
-    queries, dropped = verify_tokens(corpus)
-    print(f"[eval] 语料 {len(corpus)} 份；因正文中查不到而被剔除的关键串：{dropped if dropped else '无'}")
+    cfg = load_config(args.config)
+    corpus_dir = Path(args.corpus_dir) if args.corpus_dir else ROOT_DIR / cfg.require("paths.data_dir")
+    index_dir = Path(args.index_dir)
 
-    summary_path = ROOT_DIR / "reports" / "chunk_param_eval.json"
-    means = {}
-    if summary_path.exists():
-        for r in json.loads(summary_path.read_text(encoding="utf-8")):
-            means[(r["chunk_size"], r["chunk_overlap"])] = r["mean_chars"]
+    embedder = BGEEmbedder.from_config(cfg, verbose=False)
+    corpus = load_corpus(corpus_dir)
+    queries, dropped = verify_tokens(corpus)
+    print(f"[eval] 语料目录 {corpus_dir.name}（{len(corpus)} 份）；"
+          f"因正文中查不到而被剔除的关键串：{dropped if dropped else '无'}")
 
     results = []
-    for size, overlap in CONFIGS:
-        tag = f"cs{size}_ov{overlap}"
-        idx_path = ROOT_DIR / "data" / "index" / f"faiss_{tag}.index"
-        meta_path = ROOT_DIR / "data" / "index" / f"chunks_{tag}.json"
+    for tag in args.index_tags:
+        idx_path = index_dir / f"faiss_{tag}.index"
+        meta_path = index_dir / f"chunks_{tag}.json"
         if not idx_path.exists():
-            print(f"[eval] 缺少索引 {idx_path.name}，跳过（先跑 eval_chunk_params.py --save）")
+            print(f"[eval] 缺少索引 {idx_path.name}，跳过（先跑 build_index.py --index-path {idx_path}）")
             continue
         index = FaissIndex.load(idx_path, meta_path)
-        mean = means.get((size, overlap), 0.0)
-        top_n = args.top_n if args.top_n else max(1, round(args.budget / mean)) if mean else 3
-        budget_used = top_n * mean
-        print(f"\n[eval] ===== {tag}：{len(index)} 片，均长 {mean:.0f} 字符，"
-              f"预算 {args.budget} 字符 → Top-{top_n}（约 {budget_used:.0f} 字符）=====")
-        m = run_one(index, embedder, queries, top_n)
-        print(f"[eval] 关键串全中率 AnswerRecall={m['answer_recall']:.3f}  平均覆盖率={m['token_coverage']:.3f}")
-        for q in m["per_query"]:
-            flag = "OK  " if q["coverage"] == 1.0 else "MISS"
+        mean = float(np.mean([len(c.text) for c in index.chunks]))
+        top_n = args.top_n or max(1, round(args.budget / mean))
+
+        print(f"\n[eval] ===== 索引 {tag}：{len(index)} 片，均长 {mean:.0f} 字符，"
+              f"预算 {args.budget} → Top-{top_n}（约 {top_n * mean:.0f} 字符）=====")
+        variants = build_variants(index, embedder, cfg, index_dir, tag, not args.no_hybrid)
+        for name, retriever in variants:
+            m = run_one(retriever, queries, top_n)
+            print(f"[eval] 【{name}】关键串全中率 AnswerRecall={m['answer_recall']:.3f}  "
+                  f"平均覆盖率={m['token_coverage']:.3f}")
+            results.append(
+                {
+                    "index_tag": tag,
+                    "retriever": name,
+                    "top_n": top_n,
+                    "budget_chars": args.budget,
+                    "num_chunks": len(index),
+                    "mean_chars": mean,
+                    "answer_recall": m["answer_recall"],
+                    "token_coverage": m["token_coverage"],
+                    "per_query": m["per_query"],
+                }
+            )
+
+        # 最后一版的逐条明细，便于看是哪几条拉低了分数
+        for q in results[-1]["per_query"]:
             miss = [t for t in q["tokens"] if t not in q["covered"]]
-            print(f"       [{flag} {q['coverage']:.2f}] {q['query'][:20]:<22} 命中来源 {q['top1_doc'][:34]:<36}"
-                  f" 缺：{miss if miss else '无'}")
-        results.append(
-            {
-                "chunk_size": size,
-                "chunk_overlap": overlap,
-                "budget_chars": args.budget,
-                "top_n": top_n,
-                "num_chunks": len(index),
-                "mean_chars": mean,
-                "answer_recall": m["answer_recall"],
-                "token_coverage": m["token_coverage"],
-                "per_query": m["per_query"],
-            }
-        )
+            flag = "OK  " if q["coverage"] == 1.0 else "MISS"
+            print(f"       [{flag} {q['coverage']:.2f}] {q['query'][:20]:<22} "
+                  f"{q['top1_doc']:<34} 缺：{miss if miss else '无'}")
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -163,7 +193,7 @@ def main() -> int:
     print(f"\n[eval] 结果已写入 {out}")
     if results:
         best = max(results, key=lambda r: (r["answer_recall"], r["token_coverage"]))
-        print(f"[eval] 最佳：chunk_size={best['chunk_size']} overlap={best['chunk_overlap']} "
+        print(f"[eval] 最佳：{best['retriever']} @ {best['index_tag']} "
               f"（AnswerRecall={best['answer_recall']:.3f}, Coverage={best['token_coverage']:.3f}）")
     return 0
 

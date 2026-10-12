@@ -14,9 +14,12 @@
 | 向量化 | `src/medical_rag/embedding.py` | bge-small-zh-v1.5，批量推理，query 侧自动加指令前缀，输出 L2 归一化 |
 | 索引 | `src/medical_rag/index.py` | FAISS IndexFlatIP，落盘与重载，元数据与向量行号严格对齐 |
 | 检索 | `src/medical_rag/retrieve.py` | 单条与批量检索，输出带分数和溯源串的结果 |
-| 脚本 | `scripts/build_index.py`、`scripts/query.py` | 一键建索引、命令行查询 |
+| 混合检索 | `src/medical_rag/hybrid.py` | BM25（rank_bm25 + jieba，保留数字与英文缩写）+ 向量，用 RRF 按排名融合；分词结果带指纹缓存 |
+| 精排 | `src/medical_rag/rerank.py` | `bge-reranker-base` cross-encoder，对「向量宽召回 → 交互式打分 → 取 Top-K」做二阶段检索 |
+| 脚本 | `scripts/build_index.py`、`scripts/query.py`、`scripts/clean_corpus.py` | 建索引、命令行查询、语料清洗 |
+| 评测 | `scripts/eval_chunk_params.py`、`scripts/eval_answer_recall.py`、`scripts/compare_retrievers.py` | 切片参数对比、答案关键串召回、四种检索策略横向对比 |
 
-**未完成（后续阶段）**：生成式答案合成、RAGAS/自建评测集、幻觉率与拒答正确率统计、BM25 混合检索（依赖已装，逻辑未写）、bge-reranker 重排、Gradio/FastAPI 服务、效果对比实验。
+**未完成（后续阶段）**：100 条带标准答案的评测集（含应拒答题与数字型题）、DeepSeek 生成式答案合成与引用标注、幻觉率与拒答正确率统计、Gradio/FastAPI 服务。
 
 ---
 
@@ -198,6 +201,12 @@ Top-1 命中预期条目，且明显高于第二名的 0.5887。
 | `embedding.query_instruction` | `为这个句子生成表示以用于检索相关文章：` | bge 官方查询前缀 |
 | `embedding.local_model_dir` | 空 | 显式指定本地模型目录 |
 | `retrieval.top_k` | 5 | 默认返回条数 |
+| `retrieval.use_hybrid` | false | BM25+向量 RRF 混合。实测低于纯向量，默认关闭（见第十二节） |
+| `retrieval.hybrid.rrf_k` | 60 | RRF 常数，越大越弱化头部名次差距 |
+| `retrieval.hybrid.candidate_multiplier` | 4 | 每路候选数 = max(top_k, 20) × 该系数 |
+| `rerank.enabled` | true | 是否启用 cross-encoder 精排 |
+| `rerank.model_name` | `BAAI/bge-reranker-base` | 重排模型 |
+| `rerank.candidate_k` | 20 | 第一阶段宽召回条数，精排的候选池 |
 | `runtime.num_threads` | 12 | CPU 推理线程数 |
 
 ---
@@ -233,26 +242,33 @@ medical-rag/
 │   ├── chunking.py
 │   ├── embedding.py
 │   ├── index.py
-│   └── retrieve.py
+│   ├── retrieve.py
+│   ├── hybrid.py          # BM25 + 向量 RRF 混合
+│   └── rerank.py          # cross-encoder 二阶段精排
 ├── data/
-│   ├── raw/               # 真实语料：16 份中文临床指南全文 + sources_manifest.json
+│   ├── raw/               # 原始语料（含网页样板），不进版本库
+│   ├── clean/             # 清洗后的语料（scripts/clean_corpus.py 产出，实际入库）
 │   ├── source_original/   # 原始采集物（PDF/HTML）归档，不进版本库
 │   ├── smoke/             # 20 条样例条目（仅用于冒烟测试）
 │   ├── index/             # 构建产物，不进版本库
 │   └── clean/             # 空
-├── reports/               # 实验结果 JSON（切片参数对比、答案关键串召回）
+├── reports/               # 实验结果 JSON（切片参数对比、答案关键串召回、策略横向对比）
 ├── scripts/
 │   ├── build_index.py
 │   ├── query.py
+│   ├── clean_corpus.py           # 网页样板清洗
 │   ├── eval_chunk_params.py      # 三档切片参数对比（文档级指标）
 │   ├── eval_answer_recall.py     # 等上下文预算下的答案关键串召回
+│   ├── compare_retrievers.py     # 四种检索策略横向对比
 │   └── convert_gout_sources.py   # HTML/PDF 原始指南转 txt
 └── tests/
     ├── conftest.py
     ├── test_chunking.py
     ├── test_embedding.py
     ├── test_faiss_index.py
-    └── test_smoke_retrieval.py
+    ├── test_smoke_retrieval.py
+    ├── test_hybrid.py
+    └── test_rerank.py
 ```
 
 ---
@@ -303,12 +319,29 @@ python scripts/build_index.py     # 读 data/raw，写 data/index/faiss_main.ind
 [build] 索引已写入：data/index/faiss_main.index（13.96 MB，7147 条）
 ```
 
-检索实测（Top-3 cosine，`scripts/query.py`）：
+### 语料清洗：PubReader 网页样板
 
-| query | Top-1 来源 | Top-1 分数 |
-| --- | --- | --- |
-| 急性缺血性脑卒中静脉溶栓的时间窗 | `stroke_ais_2023.txt` · 血管再通治疗 > 静脉溶栓治疗 | 0.655 |
-| （其余 11 条探针 query 的来源命中情况见第十一节） | | |
+`scripts/clean_corpus.py` 按两条可解释的规则清洗（详见第十二节），产物落在 `data/clean/`：
+
+```
+[clean] 语料 16 份；跨文档重复行（df>=3）黑名单 436 条
+[clean] 合计：删除 6105 行，字符 1699646 -> 1572542（砍掉 7.48%）
+[build] 解析完成：16 份文档，共 1569107 字符
+[build] 切片完成：6625 片，平均 301 字符（chunk_size=300, overlap=60）
+[build] 索引已写入：data/index/faiss_clean_base.index（12.94 MB，6625 条）
+```
+
+### 检索实测
+
+默认策略为「向量召回 Top-20 + `bge-reranker-base` 精排」，`scripts/query.py` 实测：
+
+| query | Top-1 来源 | 精排得分 | 精排前名次 |
+| --- | --- | --- | --- |
+| 支气管哮喘的长期控制药物如何选择 | `asthma_2024.txt` · 哮喘慢性持续期的治疗 > 制订治疗方案 | 4.753 | 第 7 名，精排后升到第 1 |
+| 慢性心力衰竭的药物治疗方案包括哪些药物 | `heart_failure_2024_official.txt` · 急性心衰的治疗 > 药物治疗 | 5.678 | —— |
+
+第二条顺带說明一个已知问题：query 问「慢性」心衰，Top-1 落在「急性心衰」小节——这套检索还**分不清
+同一份指南内部的临床情境差异**，是当前最明显的失败模式。
 
 ---
 
@@ -362,10 +395,75 @@ python scripts/build_index.py     # 读 data/raw，写 data/index/faiss_main.ind
 
 ---
 
-## 十二、已知限制
+## 十二、检索：为什么最终选了「向量召回 + cross-encoder 精排」
+
+这一节记录的是**包括负结果在内的完整过程**。三件事：先清洗语料，再横向对比四种检索策略，
+最后按实测结果定默认方案。
+
+### 1. 语料清洗（PubReader 网页样板）
+
+上一节说的 UI 噪声怎么来的：一部分指南是从出版商网页（中华医学期刊网等）抓下来的，转 txt 时
+导航栏、备案号、版权声明、甚至「AI 问答」挂件的话术都被当成正文收了进来。混合检索上线后，
+几条 query 的 Top-3 直接被「高级检索 / 上一篇 下一篇 / 暂无评论」占掉，才暴露出来。
+
+清洗规则（两条，都可解释，不用黑箱模型）：
+
+1. **跨文档重复行**：同一行在 ≥ 3 份不同文档里都出现 → 判为样板。依据：正版医学内容不会在
+   十几份不同指南里逐字重复，只有网站框架会。
+2. **备案/版权/挂件正则**：ICP 备案、网信算备、版权所有、隐私政策、SparkDesk 用户协议等。
+
+删掉了什么（抽样核对过，不误伤正文）：参考编号 `[123]`、`返回引文位置Google Scholar`、
+`帮助中心`、`历史对话`、`Copyright by Chinese Medical Association`、相关阅读标题列表等。
+**误伤检查**：长度 > 40 字且被删的行一共只有 34 条，逐条看全是版权声明和「相关阅读」外链标题，
+没有一条是正文。合计 6,105 行、字符 1,699,646 → 1,572,542（7.48%），索引 7,147 片 → 6,625 片。
+
+### 2. 四种检索策略横向对比
+
+脚本 `scripts/compare_retrievers.py`，10 条探针 query + 答案关键串，同一索引同一预算：
+
+| 策略 | 做法 | 预算 1200（Top-4）AnswerRecall | Coverage | 预算 2400（Top-8）AnswerRecall | Coverage |
+| --- | --- | --- | --- | --- | --- |
+| `vector` | 纯向量 | **0.500** | 0.633 | 0.500 | 0.667 |
+| `hybrid_rrf` | BM25 与向量各自召回后 RRF 融合 | 0.400 | 0.600 | 0.400 | 0.633 |
+| `bm25_rerank` | 向量宽召回，BM25 在候选集内重排 | 0.400 | 0.500 | 0.400 | 0.567 |
+| `cross_encoder` | 向量宽召回 Top-N，`bge-reranker-base` 精排 | **0.500** | **0.667** | **0.600** | **0.700** |
+
+**负结果要写清楚：两种 BM25 方案都是负收益**，而且换预算、换索引都一样方向的下降。诊断结论：
+
+- 中文临床指南里「基层医疗卫生机构」「推荐使用」这类短语在**单份文档内部**反复出现，
+  BM25 会被这种局部高频短语主导；
+- 于是「适用范围」「服务要求」这类章节被顶到前排，真正写着推荐条款的片段被挤出上下文预算；
+- 也就是说，**瓶颈是「同一文档内部的段落判别」，不是「找对文档」** —— 文档级指标早就满分了。
+  稀疏的字面匹配解决不了这件事。
+
+`cross_encoder` 是全项目唯一有正向收益的改动：把 query 和候选段拼在一起做交互式打分，
+对「这段到底答没答这个问题」敏感得多；单次 20 个候选对的精排在本机 CPU 上约 0.26 秒，可用。
+
+因此默认配置是 `retrieval.use_hybrid: false` + `rerank.enabled: true`；
+混合检索的开关和代码保留，就是为了把上面这组对照重现出来，不会被悄悄删掉。
+
+### 3. 剩下的失败模式（下一步要解决的）
+
+2 条 query 在四种策略下关键串覆盖率恒为 0：
+
+| query | 缺的关键串 | 原因分析 |
+| --- | --- | --- |
+| 慢性心力衰竭的药物治疗方案包括哪些药物 | 沙库巴曲 / 达格列净 / ARNI | 答案横跨多个小节；实测 Top-1 落在「急性心衰」而非「慢性心衰」，模型没学会区分同一指南内的临床情境 |
+| 基层医疗卫生机构2型糖尿病的筛查和转诊建议 | 空腹血糖 / OGTT / 糖化血红蛋白 | query 里的「基层医疗卫生机构」在该指南里是高频套话，字面匹配直接被带偏 |
+
+10 条探针样本量太小，只够做诊断，不够做结论。**下一步是把它扩成 100 条带标准答案的评测集**
+（含应拒答题和数字型题），那才是能对外汇报的东西。
+
+---
+
+## 十三、已知限制
 
 1. **切片只用字符数，不做句边界对齐**：滑窗按字符切，长句可能被拦腰截断。下一步可以按句队列打包，让每个切片自然收尾在句末。
 2. **跨页 Section 只记起始页码**：一个标题下的正文跨多页时，页码取第一页。后续可在 Section 内存 `page_range`。
 3. **PDF 表格提取未处理**：pdfplumber 的表格数值目前混在正文里，排版较乱的表格会串行；没有 OCR，扫描件不可用。
-4. **现有检索只有向量一路**：BM25（rank_bm25 + jieba）依赖已装，混合检索放在 W2。
-5. **Windows 终端编码**：`scripts/` 下两个脚本已把 stdout 重设为 UTF-8，若仍出现乱码，执行前加 `$env:PYTHONIOENCODING = "utf-8"`。
+4. **参考文献区块没单独处理**：清洗脚本删掉了参考编号和「返回引文位置」这类样板，但参考文献的正文（英文期刊名、作者列表）仍在库里，会稀释密度。下一步可以按 `[参考文献]` 标题切断，单独存放或不入库。
+5. **检索分不清同一指南内部的临床情境**：实测「慢性心力衰竭的药物治疗」Top-1 落在「急性心衰」小节。切片已经把标题链写进正文，说明光靠标题文本不够，需要按情境（急性/慢性、成人/儿童）做元数据过滤。
+6. **10 条探针只是诊断工具**，不是 benchmark。正式结论要等 100 条带标准答案的评测集。
+7. **生成模块还没有接入**：目前只有检索结果，没有答案合成、没有引用标注、没有幻觉率统计。
+8. **Windows 终端编码**：`scripts/` 下脚本已把 stdout 重设为 UTF-8，若仍出现乱码，执行前加 `$env:PYTHONIOENCODING = "utf-8"`。
+9. **重排模型是 2.2GB 的外部资源**：`bge-reranker-base` 走 ModelScope 下载到本地缓存，脚本会从 `rerank.local_model_dir` 离线加载；没下载时 `--no-rerank` 依然可用，相关测试会自动跳过。

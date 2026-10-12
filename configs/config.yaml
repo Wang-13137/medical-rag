@@ -8,14 +8,18 @@ project:
   stage: W1
 
 paths:
-  # 真实知识库目录，由使用者自行放入 PDF / docx / txt / md
-  data_dir: data/raw
+  # 清洗后的语料目录（scripts/clean_corpus.py 产出），建索引与检索都读这里
+  data_dir: data/clean
+  # 清洗前的原始语料，保留用于回溯与重新清洗
+  raw_data_dir: data/raw
+  # 原始采集物（PDF/HTML）归档
+  original_dir: data/source_original
   # 冒烟测试样本文档目录
   smoke_data_dir: data/smoke
-  # 正式索引（真实中文临床指南语料，16 份）
-  index_path: data/index/faiss_main.index
+  # 正式索引：由 data/clean（16 份真实中文临床指南）建得，6625 条，见 README 第十节
+  index_path: data/index/faiss_clean_base.index
   # 与索引配套的切片元数据（用于引用溯源）
-  meta_path: data/index/chunks_main.json
+  meta_path: data/index/chunks_clean_base.json
 
 chunking:
   # 单个切片的最大字符数
@@ -48,6 +52,27 @@ retrieval:
   top_k: 5
   # 低于该分数的结果在打印时给出提示（不参与过滤，仅提示）
   score_floor: 0.3
+  # W2：是否启用 BM25 + 向量的 RRF 混合检索
+  # 实测在本语料上低于纯向量（关键串全中率 0.500 -> 0.400），默认关闭，保留该开关用于对照实验
+  use_hybrid: false
+  hybrid:
+    # RRF 常数 k，越大越弱化头部名次的差距
+    rrf_k: 60
+    # 每路各取 max(top_k, 20) * multiplier 条候选参与融合
+    candidate_multiplier: 4
+    # BM25 分词结果缓存（ pickle ），换索引自动重建
+    cache_path: data/index/bm25_main.pkl
+
+rerank:
+  # W2：cross-encoder 精排。实测能把答案关键串全中率从 0.500 提到 0.600（见 README 第十一节）
+  enabled: true
+  model_name: BAAI/bge-reranker-base
+  local_model_dir: %USERPROFILE%/.cache/modelscope/models/BAAI--bge-reranker-base/snapshots/master
+  device: cpu
+  batch_size: 8
+  max_length: 512
+  # 第一阶段先召回多少条候选
+  candidate_k: 20
 
 runtime:
   # CPU 推理线程数，本机 12 核

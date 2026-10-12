@@ -1,0 +1,390 @@
+[
+  {
+    "index_tag": "clean_base",
+    "strategy": "vector",
+    "top_n": 8,
+    "budget_chars": 2400,
+    "candidate_k": 40,
+    "answer_recall": 0.5,
+    "token_coverage": 0.6666666666666666,
+    "per_query": [
+      {
+        "query": "2型糖尿病患者糖化血红蛋白的控制目标是多少",
+        "coverage": 0.6666666666666666,
+        "top1_doc": "diabetes_2024.txt",
+        "missing": [
+          "7%"
+        ],
+        "retrieved_chars": 1983
+      },
+      {
+        "query": "高血压的诊断标准和血压水平分级",
+        "coverage": 1.0,
+        "top1_doc": "primary_hypertension_2025.txt",
+        "missing": [],
+        "retrieved_chars": 2416
+      },
+      {
+        "query": "急性缺血性脑卒中静脉溶栓的时间窗是多久",
+        "coverage": 1.0,
+        "top1_doc": "stroke_ais_2023.txt",
+        "missing": [],
+        "retrieved_chars": 2519
+      },
+      {
+        "query": "儿童发热如何处理，退热药物怎么用",
+        "coverage": 1.0,
+        "top1_doc": "pediatric_fever_2026.txt",
+        "missing": [],
+        "retrieved_chars": 2591
+      },
+      {
+        "query": "幽门螺杆菌的根除治疗方案有哪些",
+        "coverage": 0.6666666666666666,
+        "top1_doc": "hp_consensus6_2022.txt",
+        "missing": [
+          "克拉霉素"
+        ],
+        "retrieved_chars": 2410
+      },
+      {
+        "query": "痛风急性发作期的一线治疗药物是什么",
+        "coverage": 1.0,
+        "top1_doc": "hyperuricemia_gout_2019.txt",
+        "missing": [],
+        "retrieved_chars": 2406
+      },
+      {
+        "query": "社区获得性肺炎的经验性抗感染治疗方案",
+        "coverage": 0.3333333333333333,
+        "top1_doc": "cap_2016.txt",
+        "missing": [
+          "阿莫西林",
+          "克拉维酸"
+        ],
+        "retrieved_chars": 2531
+      },
+      {
+        "query": "慢性心力衰竭的药物治疗方案包括哪些药物",
+        "coverage": 0.0,
+        "top1_doc": "heart_failure_2024_official.txt",
+        "missing": [
+          "沙库巴曲",
+          "达格列净",
+          "ARNI"
+        ],
+        "retrieved_chars": 2307
+      },
+      {
+        "query": "支气管哮喘的长期控制药物如何选择",
+        "coverage": 1.0,
+        "top1_doc": "asthma_2024.txt",
+        "missing": [],
+        "retrieved_chars": 2521
+      },
+      {
+        "query": "基层医疗卫生机构2型糖尿病的筛查和转诊建议",
+        "coverage": 0.0,
+        "top1_doc": "primary_diabetes_2025.txt",
+        "missing": [
+          "空腹血糖",
+          "OGTT",
+          "糖化血红蛋白"
+        ],
+        "retrieved_chars": 1045
+      }
+    ]
+  },
+  {
+    "index_tag": "clean_base",
+    "strategy": "hybrid_rrf",
+    "top_n": 8,
+    "budget_chars": 2400,
+    "candidate_k": 40,
+    "answer_recall": 0.4,
+    "token_coverage": 0.6333333333333333,
+    "per_query": [
+      {
+        "query": "2型糖尿病患者糖化血红蛋白的控制目标是多少",
+        "coverage": 0.6666666666666666,
+        "top1_doc": "diabetes_2024.txt",
+        "missing": [
+          "7%"
+        ],
+        "retrieved_chars": 2175
+      },
+      {
+        "query": "高血压的诊断标准和血压水平分级",
+        "coverage": 1.0,
+        "top1_doc": "primary_hypertension_2025.txt",
+        "missing": [],
+        "retrieved_chars": 2197
+      },
+      {
+        "query": "急性缺血性脑卒中静脉溶栓的时间窗是多久",
+        "coverage": 1.0,
+        "top1_doc": "stroke_ais_2023.txt",
+        "missing": [],
+        "retrieved_chars": 2532
+      },
+      {
+        "query": "儿童发热如何处理，退热药物怎么用",
+        "coverage": 1.0,
+        "top1_doc": "pediatric_fever_2026.txt",
+        "missing": [],
+        "retrieved_chars": 2543
+      },
+      {
+        "query": "幽门螺杆菌的根除治疗方案有哪些",
+        "coverage": 0.6666666666666666,
+        "top1_doc": "hp_2022.txt",
+        "missing": [
+          "克拉霉素"
+        ],
+        "retrieved_chars": 2407
+      },
+      {
+        "query": "痛风急性发作期的一线治疗药物是什么",
+        "coverage": 1.0,
+        "top1_doc": "hyperuricemia_gout_2019.txt",
+        "missing": [],
+        "retrieved_chars": 2414
+      },
+      {
+        "query": "社区获得性肺炎的经验性抗感染治疗方案",
+        "coverage": 0.3333333333333333,
+        "top1_doc": "cap_2016.txt",
+        "missing": [
+          "阿莫西林",
+          "克拉维酸"
+        ],
+        "retrieved_chars": 2529
+      },
+      {
+        "query": "慢性心力衰竭的药物治疗方案包括哪些药物",
+        "coverage": 0.0,
+        "top1_doc": "heart_failure_2024_official.txt",
+        "missing": [
+          "沙库巴曲",
+          "达格列净",
+          "ARNI"
+        ],
+        "retrieved_chars": 2405
+      },
+      {
+        "query": "支气管哮喘的长期控制药物如何选择",
+        "coverage": 0.6666666666666666,
+        "top1_doc": "asthma_2024.txt",
+        "missing": [
+          "布地奈德"
+        ],
+        "retrieved_chars": 2519
+      },
+      {
+        "query": "基层医疗卫生机构2型糖尿病的筛查和转诊建议",
+        "coverage": 0.0,
+        "top1_doc": "primary_diabetes_2025.txt",
+        "missing": [
+          "空腹血糖",
+          "OGTT",
+          "糖化血红蛋白"
+        ],
+        "retrieved_chars": 1688
+      }
+    ]
+  },
+  {
+    "index_tag": "clean_base",
+    "strategy": "bm25_rerank",
+    "top_n": 8,
+    "budget_chars": 2400,
+    "candidate_k": 40,
+    "answer_recall": 0.4,
+    "token_coverage": 0.5666666666666667,
+    "per_query": [
+      {
+        "query": "2型糖尿病患者糖化血红蛋白的控制目标是多少",
+        "coverage": 0.6666666666666666,
+        "top1_doc": "primary_diabetes_2025.txt",
+        "missing": [
+          "7%"
+        ],
+        "retrieved_chars": 2441
+      },
+      {
+        "query": "高血压的诊断标准和血压水平分级",
+        "coverage": 1.0,
+        "top1_doc": "hypertension_clinical_practice_2022.txt",
+        "missing": [],
+        "retrieved_chars": 2374
+      },
+      {
+        "query": "急性缺血性脑卒中静脉溶栓的时间窗是多久",
+        "coverage": 0.3333333333333333,
+        "top1_doc": "stroke_ais_2023.txt",
+        "missing": [
+          "4.5",
+          "阿替普酶"
+        ],
+        "retrieved_chars": 2403
+      },
+      {
+        "query": "儿童发热如何处理，退热药物怎么用",
+        "coverage": 1.0,
+        "top1_doc": "pediatric_fever_2026.txt",
+        "missing": [],
+        "retrieved_chars": 2782
+      },
+      {
+        "query": "幽门螺杆菌的根除治疗方案有哪些",
+        "coverage": 0.3333333333333333,
+        "top1_doc": "hp_2022.txt",
+        "missing": [
+          "铋剂",
+          "克拉霉素"
+        ],
+        "retrieved_chars": 2408
+      },
+      {
+        "query": "痛风急性发作期的一线治疗药物是什么",
+        "coverage": 1.0,
+        "top1_doc": "hyperuricemia_gout_2019.txt",
+        "missing": [],
+        "retrieved_chars": 2410
+      },
+      {
+        "query": "社区获得性肺炎的经验性抗感染治疗方案",
+        "coverage": 0.0,
+        "top1_doc": "cap_2016.txt",
+        "missing": [
+          "喹诺酮",
+          "阿莫西林",
+          "克拉维酸"
+        ],
+        "retrieved_chars": 2496
+      },
+      {
+        "query": "慢性心力衰竭的药物治疗方案包括哪些药物",
+        "coverage": 0.3333333333333333,
+        "top1_doc": "heart_failure_2024_official.txt",
+        "missing": [
+          "沙库巴曲",
+          "达格列净"
+        ],
+        "retrieved_chars": 2272
+      },
+      {
+        "query": "支气管哮喘的长期控制药物如何选择",
+        "coverage": 1.0,
+        "top1_doc": "asthma_2024.txt",
+        "missing": [],
+        "retrieved_chars": 2363
+      },
+      {
+        "query": "基层医疗卫生机构2型糖尿病的筛查和转诊建议",
+        "coverage": 0.0,
+        "top1_doc": "primary_diabetes_2025.txt",
+        "missing": [
+          "空腹血糖",
+          "OGTT",
+          "糖化血红蛋白"
+        ],
+        "retrieved_chars": 1588
+      }
+    ]
+  },
+  {
+    "index_tag": "clean_base",
+    "strategy": "cross_encoder",
+    "top_n": 8,
+    "budget_chars": 2400,
+    "candidate_k": 40,
+    "answer_recall": 0.6,
+    "token_coverage": 0.7,
+    "per_query": [
+      {
+        "query": "2型糖尿病患者糖化血红蛋白的控制目标是多少",
+        "coverage": 0.6666666666666666,
+        "top1_doc": "primary_diabetes_2025.txt",
+        "missing": [
+          "7%"
+        ],
+        "retrieved_chars": 1726
+      },
+      {
+        "query": "高血压的诊断标准和血压水平分级",
+        "coverage": 1.0,
+        "top1_doc": "hypertension_clinical_practice_2022.txt",
+        "missing": [],
+        "retrieved_chars": 2441
+      },
+      {
+        "query": "急性缺血性脑卒中静脉溶栓的时间窗是多久",
+        "coverage": 1.0,
+        "top1_doc": "stroke_ais_2023.txt",
+        "missing": [],
+        "retrieved_chars": 2396
+      },
+      {
+        "query": "儿童发热如何处理，退热药物怎么用",
+        "coverage": 1.0,
+        "top1_doc": "pediatric_fever_2026.txt",
+        "missing": [],
+        "retrieved_chars": 2782
+      },
+      {
+        "query": "幽门螺杆菌的根除治疗方案有哪些",
+        "coverage": 1.0,
+        "top1_doc": "hp_2022.txt",
+        "missing": [],
+        "retrieved_chars": 2382
+      },
+      {
+        "query": "痛风急性发作期的一线治疗药物是什么",
+        "coverage": 1.0,
+        "top1_doc": "hyperuricemia_gout_2019.txt",
+        "missing": [],
+        "retrieved_chars": 2413
+      },
+      {
+        "query": "社区获得性肺炎的经验性抗感染治疗方案",
+        "coverage": 0.3333333333333333,
+        "top1_doc": "cap_2016.txt",
+        "missing": [
+          "阿莫西林",
+          "克拉维酸"
+        ],
+        "retrieved_chars": 2531
+      },
+      {
+        "query": "慢性心力衰竭的药物治疗方案包括哪些药物",
+        "coverage": 0.0,
+        "top1_doc": "primary_hypertension_2025.txt",
+        "missing": [
+          "沙库巴曲",
+          "达格列净",
+          "ARNI"
+        ],
+        "retrieved_chars": 2456
+      },
+      {
+        "query": "支气管哮喘的长期控制药物如何选择",
+        "coverage": 1.0,
+        "top1_doc": "asthma_2024.txt",
+        "missing": [],
+        "retrieved_chars": 2521
+      },
+      {
+        "query": "基层医疗卫生机构2型糖尿病的筛查和转诊建议",
+        "coverage": 0.0,
+        "top1_doc": "primary_diabetes_2025.txt",
+        "missing": [
+          "空腹血糖",
+          "OGTT",
+          "糖化血红蛋白"
+        ],
+        "retrieved_chars": 1872
+      }
+    ]
+  }
+]
