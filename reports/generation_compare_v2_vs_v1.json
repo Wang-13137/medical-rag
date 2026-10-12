@@ -1,0 +1,145 @@
+{
+  "left": "strict_v2",
+  "right": "strict_v1",
+  "n_pairs": 100,
+  "scopes": {
+    "全部题": {
+      "gold_key_recall": {
+        "left_mean": 0.665,
+        "right_mean": 0.6917,
+        "diff": -0.0267,
+        "ci95": [
+          -0.065,
+          0.01
+        ],
+        "significant": false
+      },
+      "citation_precision": {
+        "left_mean": 0.6687,
+        "right_mean": 0.6508,
+        "diff": 0.0178,
+        "ci95": [
+          -0.0043,
+          0.0428
+        ],
+        "significant": false
+      },
+      "unsupported_number_rate": {
+        "left_mean": 0.0216,
+        "right_mean": 0.02,
+        "diff": 0.0016,
+        "ci95": [
+          -0.0118,
+          0.014
+        ],
+        "significant": false
+      },
+      "full_hit": {
+        "left_mean": 0.61,
+        "right_mean": 0.65,
+        "b": 1,
+        "c": 5,
+        "p": 0.2188
+      },
+      "refused": {
+        "left_mean": 0.2,
+        "right_mean": 0.23,
+        "b": 0,
+        "c": 3,
+        "p": 0.25
+      }
+    },
+    "仅可答题": {
+      "gold_key_recall": {
+        "left_mean": 0.7824,
+        "right_mean": 0.8137,
+        "diff": -0.0314,
+        "ci95": [
+          -0.0765,
+          0.0118
+        ],
+        "significant": false
+      },
+      "citation_precision": {
+        "left_mean": 0.7867,
+        "right_mean": 0.7657,
+        "diff": 0.021,
+        "ci95": [
+          -0.0051,
+          0.051
+        ],
+        "significant": false
+      },
+      "unsupported_number_rate": {
+        "left_mean": 0.0127,
+        "right_mean": 0.0118,
+        "diff": 0.0009,
+        "ci95": [
+          0.0,
+          0.0027
+        ],
+        "significant": false
+      },
+      "full_hit": {
+        "left_mean": 0.7176,
+        "right_mean": 0.7647,
+        "b": 1,
+        "c": 5,
+        "p": 0.2188
+      },
+      "refused": {
+        "left_mean": 0.0588,
+        "right_mean": 0.0941,
+        "b": 0,
+        "c": 3,
+        "p": 0.25
+      }
+    },
+    "仅应拒答题": {
+      "gold_key_recall": {
+        "left_mean": 0.0,
+        "right_mean": 0.0,
+        "diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "significant": false
+      },
+      "citation_precision": {
+        "left_mean": 0.0,
+        "right_mean": 0.0,
+        "diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "significant": false
+      },
+      "unsupported_number_rate": {
+        "left_mean": 0.0722,
+        "right_mean": 0.0667,
+        "diff": 0.0056,
+        "ci95": [
+          -0.0833,
+          0.0833
+        ],
+        "significant": false
+      },
+      "full_hit": {
+        "left_mean": 0.0,
+        "right_mean": 0.0,
+        "b": 0,
+        "c": 0,
+        "p": 1.0
+      },
+      "refused": {
+        "left_mean": 1.0,
+        "right_mean": 1.0,
+        "b": 0,
+        "c": 0,
+        "p": 1.0
+      }
+    }
+  }
+}

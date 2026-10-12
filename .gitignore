@@ -16,6 +16,8 @@ data/raw/
 data/clean/
 # 原始采集物（PDF/HTML）同样不入库，避免二次分发指南原文
 data/source_original/
+# 生成的答案与上下文快照（含指南原文片段，避免二次分发；评测汇总走 reports/）
+data/generated/
 
 # 编辑器
 .idea/

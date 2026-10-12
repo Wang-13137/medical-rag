@@ -16,11 +16,13 @@
 | 检索 | `src/medical_rag/retrieve.py` | 单条与批量检索，输出带分数和溯源串的结果 |
 | 混合检索 | `src/medical_rag/hybrid.py` | BM25（rank_bm25 + jieba，保留数字与英文缩写）+ 向量，用 RRF 按排名融合；分词结果带指纹缓存 |
 | 精排 | `src/medical_rag/rerank.py` | `bge-reranker-base` cross-encoder，对「向量宽召回 → 交互式打分 → 取 Top-K」做二阶段检索 |
-| 脚本 | `scripts/build_index.py`、`scripts/query.py`、`scripts/clean_corpus.py` | 建索引、命令行查询、语料清洗 |
-| 评测 | `scripts/eval_chunk_params.py`、`scripts/eval_answer_recall.py`、`scripts/compare_retrievers.py` | 切片参数对比、答案关键串召回、四种检索策略横向对比 |
+| 脚本 | `scripts/build_index.py`、`scripts/query.py`、`scripts/clean_corpus.py`、`scripts/answer.py` | 建索引、命令行查询、语料清洗、带引用的问答 |
+| 评测 | `scripts/eval_chunk_params.py`、`scripts/eval_answer_recall.py`、`scripts/compare_retrievers.py`、`scripts/compare_generation.py` | 切片参数对比、答案关键串召回、四种检索策略横向对比、生成策略配对显著性检验 |
 | 评测集 | `scripts/build_benchmark.py`、`scripts/eval_benchmark.py`、`data/eval/benchmark_v1.json` | 100 条带标准答案的评测集：构建 + 原文校验，以及在上面跑 baseline（详见第十三节） |
+| 生成 | `src/medical_rag/generate.py` | 受限提示词的答案合成，强制引用编号与无依据时拒答；内置离线替身 `EchoGenerator` |
+| 生成评测 | `scripts/run_generation.py`、`scripts/eval_generation.py` | 在 benchmark 上批量生成并评测正确性、引用可溯源性、语境支持度、拒答权衡 |
 
-**未完成（后续阶段）**：DeepSeek 生成式答案合成与引用标注、幻觉率与拒答正确率统计、Gradio/FastAPI 服务。
+**未完成（后续阶段）**：Gradio 演示界面、FastAPI 服务化、把「Constraint Decoding」式的 hallucination 拦截做成硬闸门。
 
 ---
 
@@ -208,7 +210,19 @@ Top-1 命中预期条目，且明显高于第二名的 0.5887。
 | `rerank.enabled` | true | 是否启用 cross-encoder 精排 |
 | `rerank.model_name` | `BAAI/bge-reranker-base` | 重排模型 |
 | `rerank.candidate_k` | 20 | 第一阶段宽召回条数，精排的候选池 |
+| `generation.enabled` | true | 是否调用真实生成接口；false 时用离线替身 `EchoGenerator` |
+| `generation.model` | `deepseek-chat` | 生成模型 |
+| `generation.temperature` | 0.0 | 固定为 0，保证评测可复现 |
+| `generation.budget_chars` | 2400 | 送进提示词的上下文字符预算 |
+| `generation.top_n` | 8 | 送进提示词的片段数上限 |
 | `runtime.num_threads` | 12 | CPU 推理线程数 |
+
+生成接口只从环境变量 `DEEPSEEK_API_KEY` 读取密钥，配置文件里不落盘密钥：
+
+```powershell
+$env:DEEPSEEK_API_KEY = "sk-xxxx"      # PowerShell
+export DEEPSEEK_API_KEY="sk-xxxx"      # bash
+```
 
 ---
 
@@ -245,7 +259,8 @@ medical-rag/
 │   ├── index.py
 │   ├── retrieve.py
 │   ├── hybrid.py          # BM25 + 向量 RRF 混合
-│   └── rerank.py          # cross-encoder 二阶段精排
+│   ├── rerank.py          # cross-encoder 二阶段精排
+│   └── generate.py        # 答案合成（受限提示词 + 引用编号 + 拒答）
 ├── data/
 │   ├── raw/               # 原始语料（含网页样板），不进版本库
 │   ├── clean/             # 清洗后的语料（scripts/clean_corpus.py 产出，实际入库）

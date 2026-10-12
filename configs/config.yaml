@@ -74,6 +74,18 @@ rerank:
   # 第一阶段先召回多少条候选
   candidate_k: 20
 
+generation:
+  # W2 后半：答案合成。false 时使用离线替身 EchoGenerator（不联网，供测试与演示）
+  enabled: true
+  model: deepseek-chat
+  base_url: https://api.deepseek.com
+  temperature: 0.0
+  max_tokens: 800
+  # 送进提示词的上下文预算：片段按召回顺序累加，超过预算即停
+  budget_chars: 2400
+  # 送进提示词的候选条数上限
+  top_n: 8
+
 runtime:
   # CPU 推理线程数，本机 12 核
   num_threads: 12
