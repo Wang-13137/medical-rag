@@ -1,0 +1,459 @@
+[
+  {
+    "chunk_size": 300,
+    "chunk_overlap": 60,
+    "budget_chars": 1200,
+    "top_n": 4,
+    "num_chunks": 7147,
+    "mean_chars": 301.2063802994263,
+    "answer_recall": 0.5,
+    "token_coverage": 0.6333333333333333,
+    "per_query": [
+      {
+        "query": "2型糖尿病患者糖化血红蛋白的控制目标是多少",
+        "tokens": [
+          "HbA1c",
+          "7%",
+          "糖化血红蛋白"
+        ],
+        "covered": [
+          "HbA1c",
+          "糖化血红蛋白"
+        ],
+        "coverage": 0.6666666666666666,
+        "retrieved_chars": 1054,
+        "top1_doc": "diabetes_2024.txt"
+      },
+      {
+        "query": "高血压的诊断标准和血压水平分级",
+        "tokens": [
+          "140",
+          "90",
+          "诊室血压"
+        ],
+        "covered": [
+          "140",
+          "90",
+          "诊室血压"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1208,
+        "top1_doc": "primary_hypertension_2025.txt"
+      },
+      {
+        "query": "急性缺血性脑卒中静脉溶栓的时间窗是多久",
+        "tokens": [
+          "4.5",
+          "静脉溶栓",
+          "阿替普酶"
+        ],
+        "covered": [
+          "4.5",
+          "静脉溶栓",
+          "阿替普酶"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1259,
+        "top1_doc": "stroke_ais_2023.txt"
+      },
+      {
+        "query": "儿童发热如何处理，退热药物怎么用",
+        "tokens": [
+          "布洛芬",
+          "对乙酰氨基酚"
+        ],
+        "covered": [
+          "布洛芬",
+          "对乙酰氨基酚"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1391,
+        "top1_doc": "pediatric_fever_2026.txt"
+      },
+      {
+        "query": "幽门螺杆菌的根除治疗方案有哪些",
+        "tokens": [
+          "四联",
+          "铋剂",
+          "克拉霉素"
+        ],
+        "covered": [
+          "四联",
+          "铋剂"
+        ],
+        "coverage": 0.6666666666666666,
+        "retrieved_chars": 1203,
+        "top1_doc": "hp_2022.txt"
+      },
+      {
+        "query": "痛风急性发作期的一线治疗药物是什么",
+        "tokens": [
+          "秋水仙碱",
+          "NSAID"
+        ],
+        "covered": [
+          "秋水仙碱",
+          "NSAID"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1202,
+        "top1_doc": "hyperuricemia_gout_2019.txt"
+      },
+      {
+        "query": "社区获得性肺炎的经验性抗感染治疗方案",
+        "tokens": [
+          "喹诺酮",
+          "阿莫西林",
+          "克拉维酸"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 1250,
+        "top1_doc": "cap_2016.txt"
+      },
+      {
+        "query": "慢性心力衰竭的药物治疗方案包括哪些药物",
+        "tokens": [
+          "沙库巴曲",
+          "达格列净",
+          "ARNI"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 1053,
+        "top1_doc": "heart_failure_2024_official.txt"
+      },
+      {
+        "query": "支气管哮喘的长期控制药物如何选择",
+        "tokens": [
+          "吸入性糖皮质激素",
+          "ICS",
+          "布地奈德"
+        ],
+        "covered": [
+          "吸入性糖皮质激素",
+          "ICS",
+          "布地奈德"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1266,
+        "top1_doc": "asthma_2024.txt"
+      },
+      {
+        "query": "基层医疗卫生机构2型糖尿病的筛查和转诊建议",
+        "tokens": [
+          "空腹血糖",
+          "OGTT",
+          "糖化血红蛋白"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 366,
+        "top1_doc": "primary_diabetes_2025.txt"
+      }
+    ]
+  },
+  {
+    "chunk_size": 400,
+    "chunk_overlap": 80,
+    "budget_chars": 1200,
+    "top_n": 3,
+    "num_chunks": 5420,
+    "mean_chars": 393.52140221402215,
+    "answer_recall": 0.4,
+    "token_coverage": 0.6,
+    "per_query": [
+      {
+        "query": "2型糖尿病患者糖化血红蛋白的控制目标是多少",
+        "tokens": [
+          "HbA1c",
+          "7%",
+          "糖化血红蛋白"
+        ],
+        "covered": [
+          "HbA1c",
+          "糖化血红蛋白"
+        ],
+        "coverage": 0.6666666666666666,
+        "retrieved_chars": 969,
+        "top1_doc": "diabetes_2024.txt"
+      },
+      {
+        "query": "高血压的诊断标准和血压水平分级",
+        "tokens": [
+          "140",
+          "90",
+          "诊室血压"
+        ],
+        "covered": [
+          "140",
+          "90",
+          "诊室血压"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1206,
+        "top1_doc": "hypertension_clinical_practice_2022.txt"
+      },
+      {
+        "query": "急性缺血性脑卒中静脉溶栓的时间窗是多久",
+        "tokens": [
+          "4.5",
+          "静脉溶栓",
+          "阿替普酶"
+        ],
+        "covered": [
+          "4.5",
+          "静脉溶栓",
+          "阿替普酶"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1258,
+        "top1_doc": "stroke_ais_2023.txt"
+      },
+      {
+        "query": "儿童发热如何处理，退热药物怎么用",
+        "tokens": [
+          "布洛芬",
+          "对乙酰氨基酚"
+        ],
+        "covered": [
+          "布洛芬",
+          "对乙酰氨基酚"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1343,
+        "top1_doc": "pediatric_fever_2026.txt"
+      },
+      {
+        "query": "幽门螺杆菌的根除治疗方案有哪些",
+        "tokens": [
+          "四联",
+          "铋剂",
+          "克拉霉素"
+        ],
+        "covered": [
+          "四联",
+          "铋剂"
+        ],
+        "coverage": 0.6666666666666666,
+        "retrieved_chars": 1202,
+        "top1_doc": "hp_2022.txt"
+      },
+      {
+        "query": "痛风急性发作期的一线治疗药物是什么",
+        "tokens": [
+          "秋水仙碱",
+          "NSAID"
+        ],
+        "covered": [
+          "秋水仙碱",
+          "NSAID"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1203,
+        "top1_doc": "hyperuricemia_gout_2019.txt"
+      },
+      {
+        "query": "社区获得性肺炎的经验性抗感染治疗方案",
+        "tokens": [
+          "喹诺酮",
+          "阿莫西林",
+          "克拉维酸"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 1261,
+        "top1_doc": "cap_2016.txt"
+      },
+      {
+        "query": "慢性心力衰竭的药物治疗方案包括哪些药物",
+        "tokens": [
+          "沙库巴曲",
+          "达格列净",
+          "ARNI"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 1232,
+        "top1_doc": "heart_failure_2024_official.txt"
+      },
+      {
+        "query": "支气管哮喘的长期控制药物如何选择",
+        "tokens": [
+          "吸入性糖皮质激素",
+          "ICS",
+          "布地奈德"
+        ],
+        "covered": [
+          "吸入性糖皮质激素",
+          "ICS"
+        ],
+        "coverage": 0.6666666666666666,
+        "retrieved_chars": 1250,
+        "top1_doc": "asthma_2024.txt"
+      },
+      {
+        "query": "基层医疗卫生机构2型糖尿病的筛查和转诊建议",
+        "tokens": [
+          "空腹血糖",
+          "OGTT",
+          "糖化血红蛋白"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 256,
+        "top1_doc": "primary_diabetes_2025.txt"
+      }
+    ]
+  },
+  {
+    "chunk_size": 600,
+    "chunk_overlap": 120,
+    "budget_chars": 1200,
+    "top_n": 2,
+    "num_chunks": 3700,
+    "mean_chars": 570.1727027027027,
+    "answer_recall": 0.3,
+    "token_coverage": 0.5,
+    "per_query": [
+      {
+        "query": "2型糖尿病患者糖化血红蛋白的控制目标是多少",
+        "tokens": [
+          "HbA1c",
+          "7%",
+          "糖化血红蛋白"
+        ],
+        "covered": [
+          "HbA1c"
+        ],
+        "coverage": 0.3333333333333333,
+        "retrieved_chars": 408,
+        "top1_doc": "primary_diabetes_2025.txt"
+      },
+      {
+        "query": "高血压的诊断标准和血压水平分级",
+        "tokens": [
+          "140",
+          "90",
+          "诊室血压"
+        ],
+        "covered": [
+          "140",
+          "90",
+          "诊室血压"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1208,
+        "top1_doc": "primary_hypertension_2025.txt"
+      },
+      {
+        "query": "急性缺血性脑卒中静脉溶栓的时间窗是多久",
+        "tokens": [
+          "4.5",
+          "静脉溶栓",
+          "阿替普酶"
+        ],
+        "covered": [
+          "静脉溶栓"
+        ],
+        "coverage": 0.3333333333333333,
+        "retrieved_chars": 1043,
+        "top1_doc": "stroke_ais_2023.txt"
+      },
+      {
+        "query": "儿童发热如何处理，退热药物怎么用",
+        "tokens": [
+          "布洛芬",
+          "对乙酰氨基酚"
+        ],
+        "covered": [
+          "布洛芬",
+          "对乙酰氨基酚"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1295,
+        "top1_doc": "pediatric_fever_2026.txt"
+      },
+      {
+        "query": "幽门螺杆菌的根除治疗方案有哪些",
+        "tokens": [
+          "四联",
+          "铋剂",
+          "克拉霉素"
+        ],
+        "covered": [
+          "四联",
+          "铋剂"
+        ],
+        "coverage": 0.6666666666666666,
+        "retrieved_chars": 1201,
+        "top1_doc": "hp_2022.txt"
+      },
+      {
+        "query": "痛风急性发作期的一线治疗药物是什么",
+        "tokens": [
+          "秋水仙碱",
+          "NSAID"
+        ],
+        "covered": [
+          "秋水仙碱",
+          "NSAID"
+        ],
+        "coverage": 1.0,
+        "retrieved_chars": 1201,
+        "top1_doc": "hyperuricemia_gout_2019.txt"
+      },
+      {
+        "query": "社区获得性肺炎的经验性抗感染治疗方案",
+        "tokens": [
+          "喹诺酮",
+          "阿莫西林",
+          "克拉维酸"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 1214,
+        "top1_doc": "cap_2016.txt"
+      },
+      {
+        "query": "慢性心力衰竭的药物治疗方案包括哪些药物",
+        "tokens": [
+          "沙库巴曲",
+          "达格列净",
+          "ARNI"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 1231,
+        "top1_doc": "heart_failure_2024_official.txt"
+      },
+      {
+        "query": "支气管哮喘的长期控制药物如何选择",
+        "tokens": [
+          "吸入性糖皮质激素",
+          "ICS",
+          "布地奈德"
+        ],
+        "covered": [
+          "吸入性糖皮质激素",
+          "ICS"
+        ],
+        "coverage": 0.6666666666666666,
+        "retrieved_chars": 1216,
+        "top1_doc": "asthma_2024.txt"
+      },
+      {
+        "query": "基层医疗卫生机构2型糖尿病的筛查和转诊建议",
+        "tokens": [
+          "空腹血糖",
+          "OGTT",
+          "糖化血红蛋白"
+        ],
+        "covered": [],
+        "coverage": 0.0,
+        "retrieved_chars": 156,
+        "top1_doc": "primary_diabetes_2025.txt"
+      }
+    ]
+  }
+]

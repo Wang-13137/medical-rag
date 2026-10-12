@@ -12,16 +12,18 @@ paths:
   data_dir: data/raw
   # 冒烟测试样本文档目录
   smoke_data_dir: data/smoke
-  # FAISS 索引二进制文件
-  index_path: data/index/faiss_smoke.index
+  # 正式索引（真实中文临床指南语料，16 份）
+  index_path: data/index/faiss_main.index
   # 与索引配套的切片元数据（用于引用溯源）
-  meta_path: data/index/chunks_smoke.json
+  meta_path: data/index/chunks_main.json
 
 chunking:
   # 单个切片的最大字符数
-  chunk_size: 400
+  # 300/60 是 scripts/eval_chunk_params.py + eval_answer_recall.py 实测出来的最优组合
+  # （等上下文预算下关键串全中率最高），详见 README 第九节
+  chunk_size: 300
   # 相邻切片重叠的字符数（必须小于 chunk_size）
-  chunk_overlap: 80
+  chunk_overlap: 60
   # 低于该字符数的尾部落料会被并入上一个切片
   min_tail_chars: 30
   # 命中这些规则的行被识别为小标题行
