@@ -1,0 +1,262 @@
+{
+  "built_at": "2026-10-12T16:23:06",
+  "source": "data\\eval\\queries_v1.yaml",
+  "answer_key_failures": [],
+  "ambiguous_keys": [
+    {
+      "id": "QA018",
+      "spread": [
+        {
+          "key": "5~7 d",
+          "docs": 6
+        }
+      ]
+    },
+    {
+      "id": "QA035",
+      "spread": [
+        {
+          "key": "2次/d",
+          "docs": 6
+        }
+      ]
+    },
+    {
+      "id": "QA056",
+      "spread": [
+        {
+          "key": "140mmHg",
+          "docs": 5
+        },
+        {
+          "key": "90 mmHg",
+          "docs": 6
+        }
+      ]
+    },
+    {
+      "id": "QA057",
+      "spread": [
+        {
+          "key": "130/80 mmHg",
+          "docs": 4
+        }
+      ]
+    },
+    {
+      "id": "QA059",
+      "spread": [
+        {
+          "key": "130 / 80 mmHg",
+          "docs": 4
+        }
+      ]
+    }
+  ],
+  "refusal_contamination": [],
+  "refusal_probe_detail": [
+    {
+      "id": "QU001",
+      "probe_hits": {
+        "类风湿关节炎": {
+          "total": 0,
+          "docs": {}
+        },
+        "类风湿": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU002",
+      "probe_hits": {
+        "帕金森病": {
+          "total": 0,
+          "docs": {}
+        },
+        "帕金森": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU003",
+      "probe_hits": {
+        "孤独症": {
+          "total": 0,
+          "docs": {}
+        },
+        "自闭症": {
+          "total": 0,
+          "docs": {}
+        },
+        "谱系障碍": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU004",
+      "probe_hits": {
+        "近视": {
+          "total": 0,
+          "docs": {}
+        },
+        "屈光": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU005",
+      "probe_hits": {
+        "银屑病": {
+          "total": 0,
+          "docs": {}
+        },
+        "牛皮癣": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU006",
+      "probe_hits": {
+        "多动症": {
+          "total": 0,
+          "docs": {}
+        },
+        "注意缺陷": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU007",
+      "probe_hits": {
+        "前列腺增生": {
+          "total": 0,
+          "docs": {}
+        },
+        "坦索罗辛": {
+          "total": 0,
+          "docs": {}
+        },
+        "非那雄胺": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU008",
+      "probe_hits": {
+        "曲普坦": {
+          "total": 0,
+          "docs": {}
+        },
+        "偏头痛急性期": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU009",
+      "probe_hits": {
+        "颈椎病": {
+          "total": 0,
+          "docs": {}
+        },
+        "颈椎": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU010",
+      "probe_hits": {
+        "滴眼液": {
+          "total": 0,
+          "docs": {}
+        },
+        "降眼压": {
+          "total": 0,
+          "docs": {}
+        },
+        "房水": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU011",
+      "probe_hits": {}
+    },
+    {
+      "id": "QU012",
+      "probe_hits": {}
+    },
+    {
+      "id": "QU013",
+      "probe_hits": {
+        "达芬奇": {
+          "total": 0,
+          "docs": {}
+        },
+        "机器人手术": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    },
+    {
+      "id": "QU014",
+      "probe_hits": {}
+    },
+    {
+      "id": "QU015",
+      "probe_hits": {
+        "MALDI": {
+          "total": 0,
+          "docs": {}
+        },
+        "飞行时间": {
+          "total": 0,
+          "docs": {}
+        }
+      }
+    }
+  ],
+  "type_distribution": {
+    "fact": 12,
+    "numeric": 64,
+    "disambiguation": 9
+  },
+  "gold_doc_distribution": {
+    "appendicitis_pregnancy_2026.txt": 4,
+    "appendicitis_ultrasound_2025.txt": 5,
+    "appendicitis_wses_2020.txt": 2,
+    "asthma_2024.txt": 10,
+    "cap_2016.txt": 8,
+    "diabetes_2024.txt": 5,
+    "heart_failure_2024_official.txt": 10,
+    "hp_2022.txt": 8,
+    "hp_consensus6_2022.txt": 3,
+    "hypertension_clinical_practice_2022.txt": 4,
+    "hyperuricemia_gout_2019.txt": 6,
+    "hyperuricemia_gout_2024.txt": 2,
+    "pediatric_fever_2026.txt": 7,
+    "primary_diabetes_2025.txt": 3,
+    "primary_hypertension_2025.txt": 3,
+    "stroke_ais_2023.txt": 5
+  }
+}

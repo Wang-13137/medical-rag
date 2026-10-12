@@ -1,0 +1,1111 @@
+{
+  "metadata": {
+    "version": "v1",
+    "created": "2026-10-12",
+    "built_at": "2026-10-12T16:23:06",
+    "corpus_dir": "data\\clean",
+    "corpus_docs": 16,
+    "total_items": 100,
+    "answerable": 85,
+    "unanswerable": 15,
+    "type_distribution": {
+      "fact": 12,
+      "numeric": 64,
+      "disambiguation": 9
+    },
+    "gold_doc_distribution": {
+      "appendicitis_pregnancy_2026.txt": 4,
+      "appendicitis_ultrasound_2025.txt": 5,
+      "appendicitis_wses_2020.txt": 2,
+      "asthma_2024.txt": 10,
+      "cap_2016.txt": 8,
+      "diabetes_2024.txt": 5,
+      "heart_failure_2024_official.txt": 10,
+      "hp_2022.txt": 8,
+      "hp_consensus6_2022.txt": 3,
+      "hypertension_clinical_practice_2022.txt": 4,
+      "hyperuricemia_gout_2019.txt": 6,
+      "hyperuricemia_gout_2024.txt": 2,
+      "pediatric_fever_2026.txt": 7,
+      "primary_diabetes_2025.txt": 3,
+      "primary_hypertension_2025.txt": 3,
+      "stroke_ais_2023.txt": 5
+    },
+    "validation": {
+      "answer_keys_checked": 145,
+      "failed_items": 0,
+      "contaminated_refusals": 0
+    }
+  },
+  "items": [
+    {
+      "id": "QA001",
+      "question": "妊娠合并急性阑尾炎应该首选手术治疗还是保守治疗？",
+      "type": "fact",
+      "gold_doc": "appendicitis_pregnancy_2026.txt",
+      "gold_answer": "建议首选手术治疗；非手术治疗整体失败率极高（73.5%）。",
+      "answer_keys": [
+        "首选手术治疗",
+        "非手术治疗的整体失败率极高"
+      ]
+    },
+    {
+      "id": "QA002",
+      "question": "妊娠合并急性阑尾炎手术每延迟一天会带来什么风险？",
+      "type": "numeric",
+      "gold_doc": "appendicitis_pregnancy_2026.txt",
+      "gold_answer": "每延迟 1 d，流产、早产、产前出血和羊膜腔感染风险均上升。",
+      "answer_keys": [
+        "每延迟1 d",
+        "羊膜腔感染"
+      ]
+    },
+    {
+      "id": "QA003",
+      "question": "超声诊断妊娠合并急性阑尾炎的总体灵敏度和特异度是多少？",
+      "type": "numeric",
+      "gold_doc": "appendicitis_pregnancy_2026.txt",
+      "gold_answer": "总体灵敏度 77.6%，特异度 75.3%。",
+      "answer_keys": [
+        "总体灵敏度为77.6%",
+        "特异度为75.3%"
+      ]
+    },
+    {
+      "id": "QA004",
+      "question": "MRI 诊断妊娠合并急性阑尾炎的灵敏度和特异度是多少？",
+      "type": "numeric",
+      "gold_doc": "appendicitis_pregnancy_2026.txt",
+      "gold_answer": "灵敏度 0.92（95%CI 0.88~0.95），特异度 0.98（95%CI 0.97~0.98）。",
+      "answer_keys": [
+        "灵敏度和特异度分别为0.92",
+        "0.98（95% CI：0.97~0.98）"
+      ]
+    },
+    {
+      "id": "QA005",
+      "question": "超声诊断急性阑尾炎时，阑尾增粗的管径阈值是多少？",
+      "type": "numeric",
+      "gold_doc": "appendicitis_ultrasound_2025.txt",
+      "gold_answer": "取阑尾最大前后径 >6.0 mm 为阑尾增粗标准（新生儿除外）。",
+      "answer_keys": [
+        "最大前后径>6.0 mm",
+        "为阑尾增粗标准"
+      ]
+    },
+    {
+      "id": "QA006",
+      "question": "阑尾管壁厚度达到多少可作为急性阑尾炎的诊断指征？",
+      "type": "numeric",
+      "gold_doc": "appendicitis_ultrasound_2025.txt",
+      "gold_answer": "阑尾管壁厚度 ≥3.0 mm 可作为主要指征之一。",
+      "answer_keys": [
+        "管壁厚度≥3.0 mm",
+        "可作为诊断急性阑尾炎的主要指征之一"
+      ]
+    },
+    {
+      "id": "QA007",
+      "question": "超声下阑尾腔内积液深度超过多少提示炎症积液扩张？",
+      "type": "numeric",
+      "gold_doc": "appendicitis_ultrasound_2025.txt",
+      "gold_answer": "阑尾腔内积液深度 >2.6 mm 可作为阑尾内腔炎症积液扩张的指征。",
+      "answer_keys": [
+        "积液深度>2.6 mm"
+      ]
+    },
+    {
+      "id": "QA008",
+      "question": "阑尾粪石直径超过多少容易引起腔道梗阻并诱发坏疽性阑尾炎？",
+      "type": "numeric",
+      "gold_doc": "appendicitis_ultrasound_2025.txt",
+      "gold_answer": "粪石直径 >5.0 mm，或位于阑尾根部管腔等狭窄部位时易引起梗阻。",
+      "answer_keys": [
+        "粪石直径>5.0 mm",
+        "坏疽性阑尾炎"
+      ]
+    },
+    {
+      "id": "QA009",
+      "question": "急性阑尾炎合并脓肿且抗生素治疗效果不佳时，脓肿多大可行穿刺引流？",
+      "type": "numeric",
+      "gold_doc": "appendicitis_ultrasound_2025.txt",
+      "gold_answer": "脓肿直径 >3.0 cm 且抗生素治疗效果欠佳者，可先行超声引导下穿刺引流。",
+      "answer_keys": [
+        "脓肿直径>3.0 cm",
+        "穿刺引流"
+      ]
+    },
+    {
+      "id": "QA010",
+      "question": "Acute appendicitis perforation rate range?",
+      "type": "numeric",
+      "gold_doc": "appendicitis_wses_2020.txt",
+      "gold_answer": "穿孔率 16%~40%。",
+      "answer_keys": [
+        "16% to 40%"
+      ]
+    },
+    {
+      "id": "QA011",
+      "question": "What proportion of children have complicated acute appendicitis?",
+      "type": "numeric",
+      "gold_doc": "appendicitis_wses_2020.txt",
+      "gold_answer": "不足 19% 的儿童为复杂性急性阑尾炎。",
+      "answer_keys": [
+        "Less than 19% of children have a complicated acute appendicitis"
+      ]
+    },
+    {
+      "id": "QA012",
+      "question": "支气管激发试验要求患者的 FEV1 占预计值达到什么水平？",
+      "type": "numeric",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "FEV1 占预计值% ≥70% 时可进行支气管激发试验（除外 4 周内呼吸道感染）。",
+      "answer_keys": [
+        "占预计值%≥70%",
+        "可进行支气管激发试验"
+      ]
+    },
+    {
+      "id": "QA013",
+      "question": "用呼气峰流速仪做支气管舒张试验时，PEF 增加多少算阳性？",
+      "type": "numeric",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "PEF 较基线增加 ≥20% 可拟诊哮喘。",
+      "answer_keys": [
+        "PEF较基线增加≥20%"
+      ]
+    },
+    {
+      "id": "QA014",
+      "question": "重度哮喘成人患者附加低剂量口服糖皮质激素的剂量上限是多少？",
+      "type": "numeric",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "可附加低剂量 OCS，≤7.5 mg/d 泼尼松当量，作为最后的治疗手段。",
+      "answer_keys": [
+        "低剂量OCS（≤7.5 mg/d泼尼松当量）"
+      ]
+    },
+    {
+      "id": "QA015",
+      "question": "哮喘起始治疗后多久复诊，之后多久随访一次？",
+      "type": "numeric",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "起始治疗后每 2~4 周复诊，以后每 1~3 个月随访 1 次。",
+      "answer_keys": [
+        "每2~4周需复诊",
+        "以后每1~3 个月随访1次"
+      ]
+    },
+    {
+      "id": "QA016",
+      "question": "采用抗炎缓解治疗策略的哮喘患者发生轻中度急性发作时，布地奈德-福莫特罗每日最多几吸？",
+      "type": "numeric",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "160/4.5 μg 规格，早期可直接增加 1~2 吸，但不超过 8 吸/d。",
+      "answer_keys": [
+        "160/4.5 μg规格",
+        "不要超过8吸/d"
+      ]
+    },
+    {
+      "id": "QA017",
+      "question": "第 5 级治疗仍控制不佳的成人哮喘患者附加阿奇霉素的用量和疗程是什么？",
+      "type": "numeric",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "口服阿奇霉素 250~500 mg/次，每周 3 次，治疗 26~48 周。",
+      "answer_keys": [
+        "250~500 mg/次",
+        "每周3次",
+        "治疗26~48周"
+      ]
+    },
+    {
+      "id": "QA018",
+      "question": "哮喘急性发作短期口服激素，与重度哮喘长期附加低剂量激素相比，剂量和疗程有什么区别？",
+      "type": "disambiguation",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "泼尼松 0.5~1.0 mg·kg-1·d-1 或等效剂量，疗程 5~7 d。",
+      "answer_keys": [
+        "0.5~1.0 mg·kg -1·d -1",
+        "5~7 d"
+      ]
+    },
+    {
+      "id": "QA019",
+      "question": "咳嗽变异型哮喘（CVA）的首选药物和治疗疗程是多久？",
+      "type": "fact",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "推荐 ICS-LABA 作为首选药物，治疗时间在 8 周以上。",
+      "answer_keys": [
+        "推荐ICS-LABA作为首选药物",
+        "治疗时间在 8 周以上"
+      ]
+    },
+    {
+      "id": "QA020",
+      "question": "哮喘急性发作初始雾化给药的间隔时间是怎样的？",
+      "type": "disambiguation",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "初始阶段每 20 分钟 1 次或连续雾化，随后按需每 4 小时 1 次。",
+      "answer_keys": [
+        "每20分钟1次",
+        "每4小时1次"
+      ]
+    },
+    {
+      "id": "QA021",
+      "question": "哮喘急性发作早期使用吸入糖皮质激素时，剂量应增加到基础剂量的几倍？",
+      "type": "numeric",
+      "gold_doc": "asthma_2024.txt",
+      "gold_answer": "至少达基础剂量的 2 倍，最高可到 2 000 mg/d 二丙酸倍氯米松或等效剂量。",
+      "answer_keys": [
+        "至少达基础剂量的2倍",
+        "2 000 mg/d二丙酸倍氯米松"
+      ]
+    },
+    {
+      "id": "QA022",
+      "question": "住院 CAP 患者合并低氧血症时氧疗的目标血氧饱和度是多少？",
+      "type": "numeric",
+      "gold_doc": "cap_2016.txt",
+      "gold_answer": "推荐鼻导管或面罩氧疗，维持血氧饱和度在 90% 以上。",
+      "answer_keys": [
+        "维持血氧饱和度在90%以上"
+      ]
+    },
+    {
+      "id": "QA023",
+      "question": "合并感染性休克的 CAP 患者推荐的糖皮质激素方案和疗程？",
+      "type": "numeric",
+      "gold_doc": "cap_2016.txt",
+      "gold_answer": "琥珀酸氢化可的松 200 mg/d，感染性休克纠正后及时停药，一般不超过 7 d。",
+      "answer_keys": [
+        "琥珀酸氢化可的松200 mg/d",
+        "不超过7 d"
+      ]
+    },
+    {
+      "id": "QA024",
+      "question": "23 价肺炎链球菌多糖疫苗建议接种的年龄界限是多少？",
+      "type": "numeric",
+      "gold_doc": "cap_2016.txt",
+      "gold_answer": "年龄 ≥65 岁建议接种。",
+      "answer_keys": [
+        "年龄≥65岁"
+      ]
+    },
+    {
+      "id": "QA025",
+      "question": "PPV23 需要接种第二剂时，两剂之间至少间隔多久？",
+      "type": "numeric",
+      "gold_doc": "cap_2016.txt",
+      "gold_answer": "2 剂 PPV23 之间至少间隔 5 年。",
+      "answer_keys": [
+        "2剂PPV23间至少间隔5年"
+      ]
+    },
+    {
+      "id": "QA026",
+      "question": "成人社区获得性肺炎指南的适用范围是什么人群？",
+      "type": "fact",
+      "gold_doc": "cap_2016.txt",
+      "gold_answer": "年龄 18 周岁及以上、非免疫缺陷的 CAP 患者。",
+      "answer_keys": [
+        "年龄18周岁及以上非免疫缺陷"
+      ]
+    },
+    {
+      "id": "QA027",
+      "question": "万古霉素治疗的目标血药谷浓度是多少？",
+      "type": "numeric",
+      "gold_doc": "cap_2016.txt",
+      "gold_answer": "目标血药谷浓度 15~20 mg/L。",
+      "answer_keys": [
+        "目标血药谷浓度为15～20 mg/L"
+      ]
+    },
+    {
+      "id": "QA028",
+      "question": "我国肺炎链球菌对大环内酯类药物的耐药率是多少？",
+      "type": "numeric",
+      "gold_doc": "cap_2016.txt",
+      "gold_answer": "耐药率 63.2%~75.4%。",
+      "answer_keys": [
+        "对大环内酯类药物的耐药率为63.2%～75.4%"
+      ]
+    },
+    {
+      "id": "QA029",
+      "question": "重症 CAP 患者的 30 天病死率是多少？",
+      "type": "numeric",
+      "gold_doc": "cap_2016.txt",
+      "gold_answer": "ICU 中重症 CAP 患者 30 d 病死率达 23%~47%。",
+      "answer_keys": [
+        "30 d病死率达23%～47%"
+      ]
+    },
+    {
+      "id": "QA030",
+      "question": "普瑞巴林治疗痛性神经病变的起始剂量和最大剂量是多少？",
+      "type": "numeric",
+      "gold_doc": "diabetes_2024.txt",
+      "gold_answer": "50 mg 每日 3 次起始，可增至 600 mg/d，分次服用。",
+      "answer_keys": [
+        "50 mg每日3次起始",
+        "600 mg/d"
+      ]
+    },
+    {
+      "id": "QA031",
+      "question": "克利加巴林的推荐用法用量是什么？",
+      "type": "numeric",
+      "gold_doc": "diabetes_2024.txt",
+      "gold_answer": "推荐剂量每次 20 mg，每日 2 次。",
+      "answer_keys": [
+        "推荐剂量为每次20 mg",
+        "每日2次"
+      ]
+    },
+    {
+      "id": "QA032",
+      "question": "甲钴胺治疗周围神经病变的用法用量？",
+      "type": "numeric",
+      "gold_doc": "diabetes_2024.txt",
+      "gold_answer": "500~1 000 μg 每日 1 次肌注或静滴 2~4 周，之后改 500 μg 每日 3 次口服 3 个月。",
+      "answer_keys": [
+        "500~1 000 μg，每日1次",
+        "改为500 μg，每日3次"
+      ]
+    },
+    {
+      "id": "QA033",
+      "question": "依帕司他治疗糖尿病周围神经病变的用法和疗程？",
+      "type": "numeric",
+      "gold_doc": "diabetes_2024.txt",
+      "gold_answer": "50 mg 每日 3 次，餐前口服，疗程 3 个月。",
+      "answer_keys": [
+        "50 mg，每日3次，餐前口服3个月"
+      ]
+    },
+    {
+      "id": "QA034",
+      "question": "替尔泊肽的每周给药剂量范围是多少？",
+      "type": "numeric",
+      "gold_doc": "diabetes_2024.txt",
+      "gold_answer": "皮下注射 2.5~15.0 mg，每周 1 次。",
+      "answer_keys": [
+        "2.5~15.0 mg，每周1次"
+      ]
+    },
+    {
+      "id": "QA035",
+      "question": "沙库巴曲缬沙坦的推荐起始剂量是多少？",
+      "type": "numeric",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "推荐起始剂量 50 mg，2 次/d。",
+      "answer_keys": [
+        "推荐起始剂量为50 mg",
+        "2次/d"
+      ]
+    },
+    {
+      "id": "QA036",
+      "question": "维立西呱用于心衰患者的推荐起始剂量是多少？",
+      "type": "numeric",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "推荐起始剂量 2.5~5 mg，1 次/d。",
+      "answer_keys": [
+        "推荐起始剂量为2.5~5 mg"
+      ]
+    },
+    {
+      "id": "QA037",
+      "question": "地高辛治疗心衰时，血药浓度的目标范围和不能突破的上限分别是多少？",
+      "type": "disambiguation",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "建议维持 0.5~0.9 μg/L，不应高于 1.2 μg/L。",
+      "answer_keys": [
+        "维持在0.5~0.9 μg/L",
+        "不应高于1.2 μg/L"
+      ]
+    },
+    {
+      "id": "QA038",
+      "question": "LVEF≤40% 的心衰患者应避免使用哪些抗心律失常药物？",
+      "type": "fact",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "应避免使用决奈达隆及长期口服Ⅰ类抗心律失常药物。",
+      "answer_keys": [
+        "决奈达隆",
+        "Ⅰ类抗心律失常药物"
+      ]
+    },
+    {
+      "id": "QA039",
+      "question": "HFrEF 患者推荐使用的 SGLT2 抑制剂是哪两种？",
+      "type": "fact",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "达格列净或恩格列净可降低心衰加重或心血管死亡风险。",
+      "answer_keys": [
+        "达格列净或恩格列净"
+      ]
+    },
+    {
+      "id": "QA040",
+      "question": "尖端扭转型室速发作时血钾和血镁应补到什么水平？",
+      "type": "numeric",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "血钾维持 4.5~5.0 mmol/L，血镁补充至 ≥2.0 mmol/L。",
+      "answer_keys": [
+        "维持在4.5~5.0 mmol/L",
+        "补充至≥2.0 mmol/L"
+      ]
+    },
+    {
+      "id": "QA041",
+      "question": "急性心衰患者收缩压低于 90 mmHg 时应首选哪类药物？",
+      "type": "disambiguation",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "首选正性肌力药物，若无效可考虑血管收缩药。",
+      "answer_keys": [
+        "首选正性肌力药物",
+        "血管收缩药"
+      ]
+    },
+    {
+      "id": "QA042",
+      "question": "急性心衰患者 24 小时液体出入量应如何管理？",
+      "type": "numeric",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "保持出量多于入量 500~1 500 ml。",
+      "answer_keys": [
+        "出量多于入量500~1 500 ml"
+      ]
+    },
+    {
+      "id": "QA043",
+      "question": "缺血性心脏病患者植入 ICD 进行一级预防的 LVEF 阈值是多少？",
+      "type": "numeric",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "优化药物治疗至少 3 个月后仍为 LVEF≤35% 推荐植入。",
+      "answer_keys": [
+        "仍为LVEF≤35%",
+        "心肌梗死后至少40 d"
+      ]
+    },
+    {
+      "id": "QA044",
+      "question": "PVC 负荷达到多少时应考虑 PVC 诱导的心肌病？",
+      "type": "numeric",
+      "gold_doc": "heart_failure_2024_official.txt",
+      "gold_answer": "不能解释的 LVEF 降低且 PVC 负荷 ≥10% 时应考虑。",
+      "answer_keys": [
+        "PVC负荷≥10%"
+      ]
+    },
+    {
+      "id": "QA045",
+      "question": "幽门螺杆菌初次和再次根除治疗推荐什么方案、疗程多久？",
+      "type": "fact",
+      "gold_doc": "hp_2022.txt",
+      "gold_answer": "推荐铋剂四联方案，疗程 14 d。",
+      "answer_keys": [
+        "铋剂四联方案",
+        "疗程为14 d"
+      ]
+    },
+    {
+      "id": "QA046",
+      "question": "铋剂四联方案中阿莫西林联合克拉霉素的推荐剂量是多少？",
+      "type": "numeric",
+      "gold_doc": "hp_2022.txt",
+      "gold_answer": "阿莫西林 1.0 g、2 次/d，克拉霉素 500 mg、2 次/d。",
+      "answer_keys": [
+        "阿莫西林1.0 g、2次/d",
+        "克拉霉素500 mg、2次/d"
+      ]
+    },
+    {
+      "id": "QA047",
+      "question": "四环素联合甲硝唑的铋剂四联方案剂量是多少？",
+      "type": "numeric",
+      "gold_doc": "hp_2022.txt",
+      "gold_answer": "四环素 500 mg、3~4 次/d，甲硝唑 400 mg、3~4 次/d。",
+      "answer_keys": [
+        "四环素500 mg、3~4次/d",
+        "甲硝唑400 mg、3~4次/d"
+      ]
+    },
+    {
+      "id": "QA048",
+      "question": "我国幽门螺杆菌对甲硝唑的耐药率是多少？",
+      "type": "numeric",
+      "gold_doc": "hp_2022.txt",
+      "gold_answer": "甲硝唑耐药率 60%~90%。",
+      "answer_keys": [
+        "甲硝唑耐药率为60%~90%"
+      ]
+    },
+    {
+      "id": "QA049",
+      "question": "我国幽门螺杆菌对克拉霉素和左氧氟沙星的耐药率是多少？",
+      "type": "numeric",
+      "gold_doc": "hp_2022.txt",
+      "gold_answer": "克拉霉素和左氧氟沙星耐药率 20%~40%。",
+      "answer_keys": [
+        "克拉霉素和左氧氟沙星耐药率为20%~40%"
+      ]
+    },
+    {
+      "id": "QA050",
+      "question": "幽门螺杆菌感染者中青霉素过敏的比例大约是多少？",
+      "type": "numeric",
+      "gold_doc": "hp_2022.txt",
+      "gold_answer": "5%~10% 的 H. pylori 感染者存在青霉素过敏。",
+      "answer_keys": [
+        "5%~10%的 H. pylori感染者存在青霉素过敏"
+      ]
+    },
+    {
+      "id": "QA051",
+      "question": "高剂量双联方案中阿莫西林的每日总剂量要求是多少？",
+      "type": "numeric",
+      "gold_doc": "hp_2022.txt",
+      "gold_answer": "阿莫西林 ≥3.0 g/d，如 1.0 g/次、3 次/d。",
+      "answer_keys": [
+        "阿莫西林(≥3.0 g/d"
+      ]
+    },
+    {
+      "id": "QA052",
+      "question": "多耐药地区或难根除情况下可考虑含哪种药物的铋剂四联方案？",
+      "type": "fact",
+      "gold_doc": "hp_2022.txt",
+      "gold_answer": "可酌情使用含呋喃唑酮的铋剂四联方案。",
+      "answer_keys": [
+        "含呋喃唑酮的铋剂四联方案",
+        "呋喃唑酮100 mg"
+      ]
+    },
+    {
+      "id": "QA053",
+      "question": "检测幽门螺杆菌前，PPI 和抗生素类药物需要停用多久？",
+      "type": "numeric",
+      "gold_doc": "hp_consensus6_2022.txt",
+      "gold_answer": "检测前需停用 PPI、P-CAB 至少 2 周，铋剂、抗生素至少 4 周。",
+      "answer_keys": [
+        "停用PPI、P-CAB至少2周",
+        "铋剂、抗生素(包括具有抗菌作用的中药)至少4周"
+      ]
+    },
+    {
+      "id": "QA054",
+      "question": "幽门螺杆菌根除治疗后，最早多久可以评估、实际复查又安排在什么时间？",
+      "type": "disambiguation",
+      "gold_doc": "hp_consensus6_2022.txt",
+      "gold_answer": "应在完成治疗至少 4 周后评估，复查在治疗结束后 4~6 周进行。",
+      "answer_keys": [
+        "完成治疗至少4周后",
+        "治疗结束后4~6周进行"
+      ]
+    },
+    {
+      "id": "QA055",
+      "question": "13C 尿素呼气试验中成人和儿童推荐的尿素剂量分别是多少？",
+      "type": "numeric",
+      "gold_doc": "hp_consensus6_2022.txt",
+      "gold_answer": "成人及 12~17 岁青少年用 75 mg，3~11 岁儿童用 45 mg。",
+      "answer_keys": [
+        "75 mg的剂量用于成人和12~17岁的青少年",
+        "45 mg的剂量仅用于3~11岁的儿童"
+      ]
+    },
+    {
+      "id": "QA056",
+      "question": "成人高血压的诊断切点是多少？",
+      "type": "numeric",
+      "gold_doc": "hypertension_clinical_practice_2022.txt",
+      "gold_answer": "收缩压 ≥140 mmHg 和/或舒张压 ≥90 mmHg。",
+      "answer_keys": [
+        "140mmHg",
+        "90 mmHg",
+        "作为高血压的诊断标准"
+      ]
+    },
+    {
+      "id": "QA057",
+      "question": "无合并症且年龄小于 65 岁的高血压患者血压控制目标是多少？",
+      "type": "numeric",
+      "gold_doc": "hypertension_clinical_practice_2022.txt",
+      "gold_answer": "血压控制目标值为 <130/80 mmHg。",
+      "answer_keys": [
+        "130/80 mmHg",
+        "无临床合并症"
+      ]
+    },
+    {
+      "id": "QA058",
+      "question": "推荐高血压患者每日钠摄入量减少到多少？",
+      "type": "numeric",
+      "gold_doc": "hypertension_clinical_practice_2022.txt",
+      "gold_answer": "推荐钠摄入量减少至 2 000 mg/d（约 5 g 氯化钠）。",
+      "answer_keys": [
+        "减少至 2 000 mg/d",
+        "5 g 氯化"
+      ]
+    },
+    {
+      "id": "QA059",
+      "question": "尿蛋白大于 300 mg/d 的 CKD 非透析患者血压控制目标是多少？",
+      "type": "numeric",
+      "gold_doc": "hypertension_clinical_practice_2022.txt",
+      "gold_answer": "建议血压控制目标值 <130/80 mmHg，耐受者可更低。",
+      "answer_keys": [
+        "尿蛋白 > 300 mg/d",
+        "130 / 80 mmHg"
+      ]
+    },
+    {
+      "id": "QA060",
+      "question": "急性痛风发作时秋水仙碱的具体用法用量是什么？",
+      "type": "numeric",
+      "gold_doc": "hyperuricemia_gout_2019.txt",
+      "gold_answer": "秋水仙碱首剂 1 mg，1 h 后追加 0.5 mg，12 h 后改为 0.5 mg qd 或 bid。",
+      "answer_keys": [
+        "秋水仙碱首剂1 mg",
+        "1 h后追加0.5 mg",
+        "12 h后改为0.5 mg"
+      ]
+    },
+    {
+      "id": "QA061",
+      "question": "痛风患者降尿酸治疗的一线药物有哪些？",
+      "type": "fact",
+      "gold_doc": "hyperuricemia_gout_2019.txt",
+      "gold_answer": "推荐非布司他与苯溴马隆作为一线降尿酸药物。",
+      "answer_keys": [
+        "非布司他为痛风患者的一线降尿酸药物",
+        "苯溴马隆作为高尿酸血症与痛风降尿酸治疗的一线用药"
+      ]
+    },
+    {
+      "id": "QA062",
+      "question": "非布司他降尿酸治疗的起始剂量和最大剂量是多少？",
+      "type": "numeric",
+      "gold_doc": "hyperuricemia_gout_2019.txt",
+      "gold_answer": "起始 20 mg/d，2~4 周后未达标可每次增加 20 mg/d，最大 80 mg/d。",
+      "answer_keys": [
+        "起始剂量为20 mg/d",
+        "最大剂量为80 mg/d"
+      ]
+    },
+    {
+      "id": "QA063",
+      "question": "痛风急性发作完全缓解后多久开始降尿酸药物治疗？",
+      "type": "numeric",
+      "gold_doc": "hyperuricemia_gout_2019.txt",
+      "gold_answer": "建议急性发作完全缓解后 2~4 周开始降尿酸药物治疗。",
+      "answer_keys": [
+        "完全缓解后2~4周开始降尿酸药物治疗"
+      ]
+    },
+    {
+      "id": "QA064",
+      "question": "降尿酸治疗初期预防痛风发作的秋水仙碱剂量和维持时间是多久？",
+      "type": "numeric",
+      "gold_doc": "hyperuricemia_gout_2019.txt",
+      "gold_answer": "首选小剂量 0.5~1 mg/d 秋水仙碱，至少维持 3~6 个月。",
+      "answer_keys": [
+        "0.5~1 mg/d)秋水仙碱",
+        "至少维持3~6个月"
+      ]
+    },
+    {
+      "id": "QA065",
+      "question": "痛风合并肾功能不全患者使用 NSAID 有什么限制？",
+      "type": "disambiguation",
+      "gold_doc": "hyperuricemia_gout_2019.txt",
+      "gold_answer": "建议慎用或禁用 NSAID；GFR<30 ml/min 时禁用，GFR<60 不建议长程使用。",
+      "answer_keys": [
+        "建议慎用或禁用NSAID",
+        "时禁用"
+      ]
+    },
+    {
+      "id": "QA066",
+      "question": "无症状高尿酸血症患者降尿酸治疗的一线用药有哪些？",
+      "type": "fact",
+      "gold_doc": "hyperuricemia_gout_2024.txt",
+      "gold_answer": "推荐非布司他、别嘌醇、苯溴马隆作为一线用药。",
+      "answer_keys": [
+        "作为无症状高尿酸血症患者降尿酸的一线用药",
+        "推荐非布司他 别嘌醇 苯溴马隆"
+      ]
+    },
+    {
+      "id": "QA067",
+      "question": "痛风急性发作期的治疗疗程一般多长？",
+      "type": "numeric",
+      "gold_doc": "hyperuricemia_gout_2024.txt",
+      "gold_answer": "疗程 7~10 d，一般不超过 4 周。",
+      "answer_keys": [
+        "疗程为7~10 d"
+      ]
+    },
+    {
+      "id": "QA068",
+      "question": "多大月龄以上儿童可以使用退热药，推荐哪两种药物？",
+      "type": "numeric",
+      "gold_doc": "pediatric_fever_2026.txt",
+      "gold_answer": "推荐腋温 ≥38.2 ℃ 或因发热不舒适的 ≥2 月龄儿童使用对乙酰氨基酚和布洛芬。",
+      "answer_keys": [
+        "腋温≥38.2 ℃",
+        "选择对乙酰氨基酚和布洛芬退热"
+      ]
+    },
+    {
+      "id": "QA069",
+      "question": "2 月龄以上婴儿口服对乙酰氨基酚的剂量和每日最大次数？",
+      "type": "numeric",
+      "gold_doc": "pediatric_fever_2026.txt",
+      "gold_answer": "每次 10~15 mg/kg，间隔 4~6 h 可重复，24 h 不超过 4 次。",
+      "answer_keys": [
+        "每次10~15 mg/kg",
+        "24 h不超过4次"
+      ]
+    },
+    {
+      "id": "QA070",
+      "question": "和 2 月龄以上就能用的对乙酰氨基酚相比，6 月龄以上儿童用布洛芬的剂量是多少？",
+      "type": "disambiguation",
+      "gold_doc": "pediatric_fever_2026.txt",
+      "gold_answer": "每次 5~10 mg/kg，2 次用药间隔通常 6~8 h。",
+      "answer_keys": [
+        "每次5~10 mg/kg",
+        "6~8 h",
+        "≥6月龄儿童推荐口服对乙酰氨基酚或布洛芬"
+      ]
+    },
+    {
+      "id": "QA071",
+      "question": "2 岁以下婴幼儿急性发热但无明显伴随症状时，推荐做什么检查？",
+      "type": "fact",
+      "gold_doc": "pediatric_fever_2026.txt",
+      "gold_answer": "推荐常规行尿常规检查以排查尿路感染。",
+      "answer_keys": [
+        "推荐常规行尿常规检查",
+        "排查尿路感染"
+      ]
+    },
+    {
+      "id": "QA072",
+      "question": "儿童急性发热持续多久需要考虑非感染性疾病？",
+      "type": "numeric",
+      "gold_doc": "pediatric_fever_2026.txt",
+      "gold_answer": "发热持续 >1 周病因不明应考虑特殊病原或非感染性病因，不明原因发热 >2 周应排查风湿免疫性疾病和肿瘤。",
+      "answer_keys": [
+        "发热持续>1周原因不明",
+        "不明原因发热>2周"
+      ]
+    },
+    {
+      "id": "QA073",
+      "question": "热性惊厥发作急性期的首选处理是什么？",
+      "type": "fact",
+      "gold_doc": "pediatric_fever_2026.txt",
+      "gold_answer": "首选地西泮肛门给药；首剂后 5 min 未缓解可重复 1 剂。",
+      "answer_keys": [
+        "首选地西泮",
+        "肛门给药"
+      ]
+    },
+    {
+      "id": "QA074",
+      "question": "儿童测量体温时是否推荐红外线测温仪测额温？",
+      "type": "disambiguation",
+      "gold_doc": "pediatric_fever_2026.txt",
+      "gold_answer": "≥3~6 月龄儿童可测耳温，但不推荐红外线测额温。",
+      "answer_keys": [
+        "不推荐红外线测额温"
+      ]
+    },
+    {
+      "id": "QA075",
+      "question": "达到什么血糖或 HbA1c 水平可以诊断为糖尿病？",
+      "type": "numeric",
+      "gold_doc": "primary_diabetes_2025.txt",
+      "gold_answer": "空腹静脉血糖 ≥7.0 mmol/L，或 OGTT 2 h 血糖 ≥11.1 mmol/L，或 HbA1c≥6.5%。",
+      "answer_keys": [
+        "11.1 mmol/L",
+        "HbA1c≥6.5%"
+      ]
+    },
+    {
+      "id": "QA076",
+      "question": "基层糖尿病管理中血糖控制满意的标准是什么？",
+      "type": "numeric",
+      "gold_doc": "primary_diabetes_2025.txt",
+      "gold_answer": "空腹血糖 <7.0 mmol/L，非空腹血糖 <10.0 mmol/L，糖化血红蛋白 <7.0%。",
+      "answer_keys": [
+        "空腹血糖 <7.0 mmol/L",
+        "糖化血红蛋白 <7.0%"
+      ]
+    },
+    {
+      "id": "QA077",
+      "question": "基层 2 型糖尿病患者健康管理的覆盖人群是哪些？",
+      "type": "fact",
+      "gold_doc": "primary_diabetes_2025.txt",
+      "gold_answer": "辖区内年龄 ≥18 岁的 2 型糖尿病患者。",
+      "answer_keys": [
+        "18 岁及以上"
+      ]
+    },
+    {
+      "id": "QA078",
+      "question": "80 岁以下高血压患者的诊室血压达标值是多少？",
+      "type": "numeric",
+      "gold_doc": "primary_hypertension_2025.txt",
+      "gold_answer": "推荐诊室血压降至 130/80 mmHg 以下。",
+      "answer_keys": [
+        "130/80 mmHg 以下"
+      ]
+    },
+    {
+      "id": "QA079",
+      "question": "与 80 岁以下控制在 130/80 mmHg 不同，80 岁及以上高血压患者的血压目标是多少？",
+      "type": "disambiguation",
+      "gold_doc": "primary_hypertension_2025.txt",
+      "gold_answer": "建议诊室血压降至 150/90 mmHg 以下，可耐受者降至 140/90 mmHg 以下。",
+      "answer_keys": [
+        "150/90",
+        "140/90 mmHg 以下"
+      ]
+    },
+    {
+      "id": "QA080",
+      "question": "高血压患者每日食盐摄入量应控制在多少？",
+      "type": "numeric",
+      "gold_doc": "primary_hypertension_2025.txt",
+      "gold_answer": "每人每日食盐摄入量不超过 5 g。",
+      "answer_keys": [
+        "每人每日食盐摄入量不超过 5 g"
+      ]
+    },
+    {
+      "id": "QA081",
+      "question": "准备静脉溶栓的急性缺血性卒中患者血压应控制在什么水平？",
+      "type": "numeric",
+      "gold_doc": "stroke_ais_2023.txt",
+      "gold_answer": "收缩压 <180 mmHg、舒张压 <100 mmHg。",
+      "answer_keys": [
+        "收缩压<180 mmHg",
+        "舒张压<100 mmHg"
+      ]
+    },
+    {
+      "id": "QA082",
+      "question": "不符合溶栓或取栓适应证的缺血性卒中患者，阿司匹林的推荐用量是多少？",
+      "type": "numeric",
+      "gold_doc": "stroke_ais_2023.txt",
+      "gold_answer": "发病后尽早口服阿司匹林 150~300 mg/d。",
+      "answer_keys": [
+        "阿司匹林150~300 mg/d"
+      ]
+    },
+    {
+      "id": "QA083",
+      "question": "前循环大动脉闭塞患者推荐机械取栓的条件包括哪些？",
+      "type": "numeric",
+      "gold_doc": "stroke_ais_2023.txt",
+      "gold_answer": "年龄 ≥18 岁、NIHSS 评分 ≥6 分、ASPECTS≥6 分、动脉穿刺时间控制在发病后 6 h 内。",
+      "answer_keys": [
+        "NIHSS评分≥6分",
+        "ASPECTS≥6分",
+        "6 h内"
+      ]
+    },
+    {
+      "id": "QA084",
+      "question": "急性缺血性卒中患者血糖应控制在什么范围？",
+      "type": "numeric",
+      "gold_doc": "stroke_ais_2023.txt",
+      "gold_answer": "可将高血糖患者血糖控制在 7.8~10.0 mmol/L。",
+      "answer_keys": [
+        "7.8~10.0 mmol/L"
+      ]
+    },
+    {
+      "id": "QA085",
+      "question": "尿激酶静脉溶栓的用法用量是什么？",
+      "type": "numeric",
+      "gold_doc": "stroke_ais_2023.txt",
+      "gold_answer": "尿激酶 100 万~150 万 IU 溶于生理盐水 100~200 ml，持续静脉滴注 30 min。",
+      "answer_keys": [
+        "100万~150万IU",
+        "持续静脉滴注 30 min"
+      ]
+    },
+    {
+      "id": "QU001",
+      "question": "类风湿关节炎患者应该选择哪种生物制剂治疗？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "类风湿关节炎在 16 份指南中零出现，知识库无依据。",
+      "probe_terms": [
+        "类风湿关节炎",
+        "类风湿"
+      ]
+    },
+    {
+      "id": "QU002",
+      "question": "帕金森病患者应该首选哪种抗帕金森病药物？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "帕金森病在语料中零出现。",
+      "probe_terms": [
+        "帕金森病",
+        "帕金森"
+      ]
+    },
+    {
+      "id": "QU003",
+      "question": "儿童孤独症谱系障碍的早期干预方法有哪些？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "孤独症/自闭症在语料中零出现。",
+      "probe_terms": [
+        "孤独症",
+        "自闭症",
+        "谱系障碍"
+      ]
+    },
+    {
+      "id": "QU004",
+      "question": "青少年近视应该如何进行药物防控？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "近视在语料中零出现。",
+      "probe_terms": [
+        "近视",
+        "屈光"
+      ]
+    },
+    {
+      "id": "QU005",
+      "question": "寻常型银屑病患者的系统治疗药物如何选择？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "银屑病在语料中零出现。",
+      "probe_terms": [
+        "银屑病",
+        "牛皮癣"
+      ]
+    },
+    {
+      "id": "QU006",
+      "question": "注意缺陷多动障碍儿童应该用什么药物？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "多动症在语料中零出现。",
+      "probe_terms": [
+        "多动症",
+        "注意缺陷"
+      ]
+    },
+    {
+      "id": "QU007",
+      "question": "良性前列腺增生患者首选哪类药物治疗？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "良性前列腺增生、坦索罗辛、非那雄胺在语料中零出现；「前列腺」仅以「前列腺素」「前列腺肥大」形式出现。",
+      "probe_terms": [
+        "前列腺增生",
+        "坦索罗辛",
+        "非那雄胺"
+      ]
+    },
+    {
+      "id": "QU008",
+      "question": "偏头痛急性发作期应该使用哪种特异性治疗药物？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "「偏头痛」仅在卒中指南的鉴别问诊清单里出现 1 次，无任何急性期用药推荐。",
+      "probe_terms": [
+        "曲普坦",
+        "偏头痛急性期"
+      ]
+    },
+    {
+      "id": "QU009",
+      "question": "颈椎病患者应该做哪些康复锻炼动作？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "颈椎病在语料中零出现。",
+      "probe_terms": [
+        "颈椎病",
+        "颈椎"
+      ]
+    },
+    {
+      "id": "QU010",
+      "question": "青光眼患者降眼压的一线滴眼液是什么？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "「青光眼」仅作为糖皮质激素禁忌症、不良反应被列举出现，无降眼压药物推荐内容。",
+      "probe_terms": [
+        "滴眼液",
+        "降眼压",
+        "房水"
+      ]
+    },
+    {
+      "id": "QU011",
+      "question": "我父亲今年 68 岁，血压 158/96 mmHg，同时有 2 型糖尿病，能不能直接给他开氨氯地平加培哚普利？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "属于个体化处方决策，指南无该患者的合并用药史、肾功能等信息，应建议线下就诊。",
+      "probe_terms": []
+    },
+    {
+      "id": "QU012",
+      "question": "我儿子 3 岁，体重 14 kg，这次发热 39 度，家里有布洛芬混悬液，他应该喝几毫升？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "指南只给出按体重计算的 mg/kg 剂量，未给出具体剂型规格的毫升换算，跨剂型换算需由医师或药师确认。",
+      "probe_terms": []
+    },
+    {
+      "id": "QU013",
+      "question": "妊娠合并急性阑尾炎可以用达芬奇机器人手术系统完成吗？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "指南讨论手术时机与方式，未涉及手术机器人平台。",
+      "probe_terms": [
+        "达芬奇",
+        "机器人手术"
+      ]
+    },
+    {
+      "id": "QU014",
+      "question": "2028 年会不会发布新版中国急性缺血性脑卒中诊治指南？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "属于无法从现有文献推断的未来事项。",
+      "probe_terms": []
+    },
+    {
+      "id": "QU015",
+      "question": "MALDI-TOF 质谱做样时应该怎么设置峰对齐的 ppm 容差？",
+      "type": "unanswerable",
+      "gold_doc": null,
+      "refuse_reason": "语料中虽有 5 处「质谱」字样（串联质谱测醛固酮、质谱非靶向代谢组学研究），但均为背景引用，不存在任何 MALDI-TOF 或飞行时间相关内容，不足以支撑作答。",
+      "probe_terms": [
+        "MALDI",
+        "飞行时间"
+      ]
+    }
+  ]
+}
