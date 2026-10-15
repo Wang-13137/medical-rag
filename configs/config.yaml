@@ -80,6 +80,21 @@ rerank:
   # 第一阶段先召回多少条候选
   candidate_k: 20
 
+agent:
+  # W5：ReAct 智能体。检索能力不变，只是把「用哪个工具」交给模型决定。
+  # 主循环手写（src/medical_rag/agent.py），不引框架，便于逐步计数与测试。
+  # 单题最大步数（含 finish）；超步即退化为拒答，避免死循环烧钱
+  max_steps: 6
+  # 与生成端同一口径的上下文预算，便于和流水线基线做等预算对比
+  budget_chars: 2400
+  # 单次工具调用的召回条数上限
+  top_k: 8
+  # 解析不出「行动」时最多回喂几次格式要求
+  max_parse_retries: 2
+  # 是否把 BM25 作为 keyword_search 工具暴露给模型（W2 实测混合检索为负收益，
+  # 但作为「可选工具」让模型自己决定，是另一回事，默认关闭以便对照）
+  expose_keyword_tool: false
+
 generation:
   # W2 后半：答案合成。false 时使用离线替身 EchoGenerator（不联网，供测试与演示）
   enabled: true

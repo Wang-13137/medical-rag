@@ -1,0 +1,28 @@
+{
+  "counts": {
+    "total": 100,
+    "answerable_scored": 85,
+    "unanswerable": 15
+  },
+  "actions": {
+    "pass": 90,
+    "flagged": 10
+  },
+  "changed_rate": 0.1,
+  "answerable": {
+    "key_recall_before": 0.8137,
+    "key_recall_after": 0.8137,
+    "key_recall_delta": 0.0,
+    "unsupported_number_rate_before": 0.0118,
+    "unsupported_number_rate_after": 0.0118,
+    "items_losing_recall": 0
+  },
+  "unanswerable": {
+    "refusal_broken": 0
+  },
+  "lost_detail": [],
+  "generated": "data/generated/generation_strict.jsonl",
+  "mode": "flag",
+  "threshold": 0.6,
+  "require_cited_support": false
+}
