@@ -1,0 +1,13 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+tests/
+reports/
+data/generated/
+data/raw/
+data/source_original/
+data/smoke/
+*.md
+!README.md

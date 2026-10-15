@@ -38,7 +38,7 @@ ReAct 智能体在 100 题上显著低于固定流水线。所有数字都在 `r
 | 蕴含校验 | `src/medical_rag/verify.py`、`scripts/calibrate_verifier.py`、`scripts/apply_verifier.py` | 生成后逐句校验：数字溯源 + 字面覆盖；阈值由合成污染样本标定（第十六.2） |
 | 智能体层 | `src/medical_rag/agent.py`、`scripts/run_agent.py` | 手写 ReAct 主循环，把检索/精排/校验暴露为工具，带步数、预算、欠召回护栏（第十七节） |
 
-**未完成**：FastAPI 服务化、情境元数据过滤（第十四节第 5 条）、留出验证（第 8 条）。
+**未完成**：情境元数据过滤（第十四节第 5 条）、留出验证（第 8 条）。
 演示界面已完成：`python scripts/gradio_demo.py`（见第十八节）。
 
 ---
@@ -784,13 +784,24 @@ python scripts/eval_generation.py data/generated/agent_react_minread5.jsonl `
   data/generated/agent_react.jsonl data/generated/generation_strict.jsonl `
   --out reports/generation_eval_agent_minread5.json
 
-# 测试（128 项）
+# 测试（136 项）
 python -m pytest tests/ -q
 
 # 演示界面（http://127.0.0.1:7860）
 python scripts/gradio_demo.py
 python scripts/gradio_demo.py --share    # 生成公网临时链接
 ```
+
+# 服务化（FastAPI）
+python scripts/serve.py --port 8000
+curl -X POST localhost:8000/v1/answer -H "Content-Type: application/json" \
+     -d '{"question":"妊娠合并急性阑尾炎首选手术还是保守治疗？"}'
+docker build -t medical-rag:0.5 . && docker run -p 8000:8000 \
+     -v ${PWD}/data/index:/app/data/index medical-rag:0.5
+
+接口：`POST /v1/answer`（strict / naive / agent 三种模式，返回答案、引用、逐句判决、成本）、
+`GET /healthz`、`GET /v1/stats`。设了 `SERVICE_API_KEY` 时请求必须带 `X-API-Key`；
+同参数问题走 LRU 缓存；每次请求打一条 JSON 日志（request_id / 延迟 / 上下文字数 / 是否命中缓存）。
 
 界面四个面板各自回答一个问题：
 **引用原文**（`[n]` 对应哪份指南的哪一小节）、
