@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""中文医疗 RAG 系统（W1–W5）的模块集合。
+"""中文医疗 RAG 系统（W1–W6）的模块集合。
 
 按出场顺序分层：
 - 基础件：文档解析（ingest）、切片（chunking）、向量化（embedding）、索引与检索（index / retrieve）
@@ -7,11 +7,13 @@
 - W3：受限提示词的答案合成与引用标注（generate）
 - W4：逐句蕴含校验闸门（verify）
 - W5：手写 ReAct 智能体层（agent）
+- W6 工程收尾：MCP 工具协议（mcp_server）、LangGraph 固定编排对照（langgraph_flow）、
+  多轮会话记忆（session）、结构化输出（schema）、可观测性（telemetry）
 
 参数集中在 configs/config.yaml，评测产物集中在 reports/。
 """
 
-__version__ = "0.5.0-w5"
+__version__ = "0.6.0-w6"
 
 __all__ = [
     "config",
@@ -25,4 +27,9 @@ __all__ = [
     "generate",
     "verify",
     "agent",
+    "mcp_server",
+    "langgraph_flow",
+    "session",
+    "schema",
+    "telemetry",
 ]

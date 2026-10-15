@@ -1,10 +1,10 @@
-# 中文医疗知识库 RAG 系统（W1–W5）
+# 中文医疗知识库 RAG 系统（W1–W6）
 
 面向 2027 届校招算法岗的转码作品集项目。差异化不在「能问答」，而在配套一套可量化的评测体系，
 以及**把负结果也测出来并写下来**：BM25 混合检索在本语料上是负收益、生成后蕴含校验闸门对强提示词是负收益、
 ReAct 智能体在 100 题上显著低于固定流水线。所有数字都在 `reports/` 里有出处。
 
-## 零、五个阶段与一句话结论
+## 零、六个阶段与一句话结论
 
 | 阶段 | 做了什么 | 一句话结论 | 累计测试 |
 |---|---|---|---|
@@ -13,8 +13,10 @@ ReAct 智能体在 100 题上显著低于固定流水线。所有数字都在 `r
 | W3 | 受限生成、引用标注、幻觉与拒答评测 | RAG 较闭卷 +0.696；瓶颈在检索不在生成 | 74 |
 | W4 | 句边界切片、逐句蕴含校验闸门 | 切片方向为正未达显著；闸门只对弱约束生成有价值 | 96 |
 | W5 | 手写 ReAct 智能体层 | Agent 召回 0.649 低于流水线 0.814（p=0.0009），根因欠召回 | 117 |
+| W6 | 服务化、MCP、LangGraph 对照、多轮与结构化、可观测性 | 工程收尾不改变评测数字；手写与框架版的差异在可控性不在召回 | 206 |
 
-每个阶段的详细结论分别在第十三（W1–W2 评测）、第十五（W3）、第十六（W4）、第十七（W5）节。
+每个阶段的详细结论分别在第十三（W1–W2 评测）、第十五（W3）、第十六（W4）、第十七（W5）、
+第十九至二十二（W6）节。
 
 ---
 
@@ -250,7 +252,7 @@ export DEEPSEEK_API_KEY="sk-xxxx"      # bash
 python -m pytest tests -q
 ```
 
-实测：**33 项全部通过**（约 17 秒，模型加载占大头）。
+实测：**206 项全部通过**（约 20 秒，模型加载占大头）。
 
 | 测试文件 | 覆盖内容 |
 | --- | --- |
@@ -258,6 +260,11 @@ python -m pytest tests -q
 | `tests/test_embedding.py` | 输出 512 维、query 侧自动拼指令前缀（与手动拼前缀结果一致、与不拼明显不同、重复前缀不叠加）、相同文本向量完全一致、批量输出顺序正确、语义相近文本相似度更高、空批次不崩溃 |
 | `tests/test_faiss_index.py` | 保存后重载的命中顺序与分数逐位一致、溯源字段往返不丢失、缺失文件与维度/数量不一致时报错、自身向量检索必命中自己、结果降序、`top_k` 超过语料规模自动裁剪 |
 | `tests/test_smoke_retrieval.py` | 用 smoke 数据走完整条链路，5 组 query 断言 Top-1 就是预期条目；溯源串、批量与单条结果一致、空 query 报错 |
+| `tests/test_mcp.py`（19） | MCP 协议帧：initialize 版本协商、tools/list 六个工具的 schema、未知方法 -32601、坏 JSON -32700、通知不回包；工具语义：检索结构化返回、校验能检出无依据数字、工具内部异常转成 `isError` 而不打断连接 |
+| `tests/test_langgraph_flow.py`（11） | 固定图的节点顺序与降级分支：无精排器时跳过、预算与 `top_n` 生效、无依据句子触发一次修订、`max_revisions=0` 时不修订、关键词结果去重合并、空召回不崩 |
+| `tests/test_session.py`（22） | 多轮记忆：窗口截断、追问判定（指代与短弱问）、改写回补主题词、历史预算、出处偏好排序、序列化往返、会话淘汰；结构化输出：围栏剥离、废话中提取、越界引用截断、缺 citations 时回退正文解析 |
+| `tests/test_telemetry.py`（9） | span 计时与异常记录、trace 序列化、JSONL 落盘、`keep` 上限、聚合统计的均值与 p95 |
+| `tests/test_serve.py`（16） | 三个端点、鉴权 401、缓存命中与关闭、空问题 422、stats 的索引/会话/trace 字段；多轮改写、结构化输出的两条路径（模型给 JSON / 服务端兜底） |
 
 ---
 
@@ -784,7 +791,16 @@ python scripts/eval_generation.py data/generated/agent_react_minread5.jsonl `
   data/generated/agent_react.jsonl data/generated/generation_strict.jsonl `
   --out reports/generation_eval_agent_minread5.json
 
-# 测试（136 项）
+# W6 MCP 工具服务（stdio，配到任意支持 MCP 的客户端即可）
+python scripts/run_mcp_server.py --keyword
+python scripts/run_mcp_server.py --once '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+
+# W6 LangGraph 固定编排图（与 ReAct 对照，产出同构 JSONL 可直接评测）
+python scripts/run_langgraph.py --limit 30 --out data/generated/langgraph.jsonl
+python scripts/compare_generation.py data/generated/langgraph.jsonl `
+  data/generated/agent_react.jsonl
+
+# 测试（206 项）
 python -m pytest tests/ -q
 
 # 演示界面（http://127.0.0.1:7860）
@@ -796,8 +812,10 @@ python scripts/gradio_demo.py --share    # 生成公网临时链接
 python scripts/serve.py --port 8000
 curl -X POST localhost:8000/v1/answer -H "Content-Type: application/json" \
      -d '{"question":"妊娠合并急性阑尾炎首选手术还是保守治疗？"}'
-docker build -t medical-rag:0.5 . && docker run -p 8000:8000 \
-     -v ${PWD}/data/index:/app/data/index medical-rag:0.5
+curl -X POST localhost:8000/v1/chat -H "Content-Type: application/json" \
+     -d '{"session_id":"demo","question":"那疗程多久？","response_format":"json"}'
+docker build -t medical-rag:0.6 . && docker run -p 8000:8000 \
+     -v ${PWD}/data/index:/app/data/index medical-rag:0.6
 
 接口：`POST /v1/answer`（strict / naive / agent 三种模式，返回答案、引用、逐句判决、成本）、
 `GET /healthz`、`GET /v1/stats`。设了 `SERVICE_API_KEY` 时请求必须带 `X-API-Key`；
@@ -814,7 +832,107 @@ docker build -t medical-rag:0.5 . && docker run -p 8000:8000 \
 
 ---
 
-## 十九、下一步
+## 十九、W6-1：MCP 工具服务（`mcp_server.py`）
+
+把检索、精排、校验、问答四件事按 MCP 暴露出来，任何支持 MCP 的客户端（Claude Desktop、
+Cursor、自己写的 Agent）都能直接调用，不必先读这个仓库的代码。
+
+**六个工具**：`guideline_search`（语义检索）、`keyword_search`（BM25，需 `--keyword`）、
+`rerank_explain`（精排前后名次对比）、`verify_answer`（逐句依据校验）、
+`answer_question`（整条链路一步到位）、`index_stats`（索引规模与当前生成器）。
+
+**手写协议而不是引 SDK**，理由和手写 ReAct 一致：能回答「一帧里有什么」，
+也让依赖面保持在零。实现的是 stdio 传输 + JSON-RPC 2.0，支持
+`initialize`（含版本协商，接受 2025-06-18 与 2024-11-05）、`ping`、
+`tools/list`、`tools/call`、通知类不回包。
+
+两个刻意的设计：
+
+- **工具级错误走 `isError` 结果帧，不升级成协议错误**。工具挂了不该把连接打断，
+  上层 Agent 拿到的是「这个工具这次没成」，而不是一条断开的 stdio。
+- **结果同时给 `content` 与 `structuredContent`**。前者给人和不支持结构化内容的客户端，
+  后者给程序，省掉一次 JSON 解析。
+
+真实资源下实测：`index_stats` 返回 `index_chunks=6625`、
+`retrieval_mode=向量召回 + cross-encoder 精排`、`generator=DeepSeekGenerator`、`stage=W6`。
+
+---
+
+## 二十、W6-2：用 LangGraph 写同一套流程来对照（`langgraph_flow.py`）
+
+这一节的价值不在「多用了个框架」，而在**把手写 ReAct 的代价量化成可比较的两栏**。
+
+| | 手写 ReAct（`agent.py`） | LangGraph 固定图（本模块） |
+| --- | --- | --- |
+| 谁决定下一步 | 模型，逐步输出 Thought/Action | 代码，节点与边写死 |
+| 检索几次、读几条 | 模型自由裁量（实测平均只读 2.11 条） | 固定：Top-8、预算 2400 字 |
+| 失败模式 | 可能欠召回就收尾；格式解析失败需重试 | 无解析环节，失败只可能是底层组件 |
+| 可复现性 | 依赖模型，同一题两次可能不同 | 同一输入必得同一轨迹 |
+| 代价 | 每题 4~5.5 次 LLM 调用 | 每题 1 次（修订走剪枝，不再调 LLM） |
+
+节点是 `retrieve → rerank → read → generate → verify`，
+`verify` 之后是条件边：有句子找不到依据就进 `revise`（把无依据句子剪掉），
+否则直接 `finish`。`max_revisions` 控制最多改几轮，默认 1。
+
+底层能力**与 ReAct 版共用同一个 retriever、同一个精排器、同一个校验器**，
+所以两侧出现的差异只能来自控制流本身，这是对照成立的前提。
+
+产物与 `run_agent.py` 同构，可以直接喂给 `eval_generation.py`，
+再用 `compare_generation.py` 与 ReAct 版做配对 bootstrap + McNemar。
+
+---
+
+## 二十一、W6-3：多轮会话记忆与结构化输出（`session.py` / `schema.py`）
+
+### 多轮：解决的是「追问里的指代消失」
+
+失败模式很具体：用户第二轮问「那疗程多久？」，检索器拿到一句没有主体的话，
+召回质量掉到随机水平。解决办法不是把整段历史拼进 query（会稀释主题），
+而是**只回补主题词**：判定这一轮是追问后，把上一轮问题里的主题词前置，
+`那疗程多久？` 变成 `妊娠 合并 急性 阑尾炎 首选 手术 那疗程多久？`。
+
+追问判定有两条信号：含指代词（它 / 这个 / 上述 / 那如果 …），
+或是不含主语的短弱问（疗程 / 剂量 / 多久 / 能不能 …，且长度 ≤ 12）。
+另外保留 `history_block`（压缩后的历史，预算硬上限）与出处偏好
+（上一轮引用过的指南，本轮命中时排前面）。
+
+真实链路实测：第一轮问「妊娠合并急性阑尾炎首选手术还是保守治疗？」，
+第二轮问「那疗程多久？」——改写生效、`history_used=true`，
+第二轮答案正确地说出「资料未明确说明具体疗程」，没有编一个数字出来。
+
+### 结构化输出：让模型按 schema 回答，而不是吐一段需要猜的文本
+
+下游是程序不是人：答案要被引用解析、被逐句校验、被渲染、被 Agent 消费，
+每一步都在猜。约定 schema 之后「答案 - 引用 - 依据」的对应关系是显式的。
+
+字段刻意**不含模型自报的置信度**——自报分数没校准过，拿来当闸门只会制造错觉；
+`grounding`（有依据句子占比）由校验器算，不由模型说。
+
+服务端的兜底策略：模型不按 schema 输出（或生成器是离线替身）时，
+用已有文本答案组装出同样完整的字段，接口不会返回 `null`。
+
+---
+
+## 二十二、W6-4：可观测性（`telemetry.py`）
+
+要观测的不是「接口慢不慢」，而是**一次问答内部的时间去哪了**。
+一次请求一条 trace，一条 trace 若干 span：检索、精排、生成、校验、结构化各占多少毫秒，
+Agent 每一步调用了什么工具。产物是一行 JSON，字段固定，可直接 grep。
+
+```json
+{"trace_id":"e68f51c5b040","event":"chat","spans":[{"name":"retrieve","ms":2468}],
+ "fields":{"session":"e2e"},"total_ms":5698}
+```
+
+`/v1/stats` 直接给出聚合：请求数、总耗时均值与 p95、各 span 均值。
+实测一轮多轮问答：retrieve 2468 ms（cross-encoder 在 CPU 上）、generate 1135 ms、verify 2.65 ms
+——瓶颈一眼可见，不需要猜。
+
+落盘与打屏都由环境变量控制（`TRACE_JSONL` / `TRACE_ECHO=1`），不接任何外部服务。
+
+---
+
+## 二十三、下一步
 
 1. **给「读出证据」设更强的下限**：17.3 说明欠召回是主因，下一步不是再放宽护栏，
    而是把「读几条」从模型自由裁量改成由**检索分数的下降曲线**自动决定（分数断崖处截断）。

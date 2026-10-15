@@ -1,4 +1,4 @@
-# 中文医疗 RAG 系统 —— W1–W5 全部依赖
+# 中文医疗 RAG 系统 —— W1–W6 全部依赖
 # 全部安装到隔离 venv：python
 #   pip install -r requirements.txt
 # torch 走 CPU 版本，本机 12 核无 GPU，保持 torch==2.14.1+cpu 不变以避免重装大包。
@@ -27,6 +27,9 @@ httpx==0.28.1               # W3 生成端直连 DeepSeek，不引入 SDK
 pytest==9.1.1
 
 gradio==6.30.0               # 演示界面（scripts/gradio_demo.py）
+fastapi==0.143.1             # 服务化（scripts/serve.py）
+uvicorn==0.54.0
+langgraph==1.2.15            # W6 固定编排图对照（src/medical_rag/langgraph_flow.py）
+typing_extensions==4.16.0    # langgraph_flow 的 GraphState 需要
 
-# 以下依赖当前未安装，留待后续：
-# fastapi / uvicorn  —— 服务化
+# 可选：MCP 服务（src/medical_rag/mcp_server.py）不依赖任何第三方包，手写 JSON-RPC 2.0。

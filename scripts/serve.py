@@ -35,13 +35,24 @@ from fastapi import FastAPI, Header, HTTPException  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
 
 from medical_rag.config import load_config  # noqa: E402
-from medical_rag.generate import DeepSeekGenerator, EchoGenerator, load_generator  # noqa: E402
+from medical_rag.generate import (  # noqa: E402
+    DeepSeekGenerator,
+    EchoGenerator,
+    build_context_block,
+    load_generator,
+    parse_citations,
+)
+from medical_rag.schema import parse_structured_answer, render_json_instruction  # noqa: E402
+from medical_rag.session import SessionStore  # noqa: E402
+from medical_rag.telemetry import Tracer, tracer_from_env  # noqa: E402
 from medical_rag.verify import verify_answer  # noqa: E402
 from eval_benchmark import make_retriever  # noqa: E402
 from run_generation import build_contexts  # noqa: E402
 
 CACHE_MAX = int(os.environ.get("SERVICE_CACHE_MAX", "128"))
 _CACHE: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
+TRACER: Tracer = tracer_from_env()
+SESSIONS = SessionStore(capacity=int(os.environ.get("SERVICE_SESSIONS", "200")))
 
 
 # ------------------------------------------------------------------ 请求与响应模型
@@ -78,11 +89,31 @@ class AnswerResponse(BaseModel):
     cached: bool = False
 
 
+class ChatRequest(BaseModel):
+    session_id: str = Field("default", max_length=64)
+    question: str = Field(..., min_length=1, max_length=500)
+    mode: str = Field("strict", description="strict | naive")
+    top_n: int = Field(8, ge=1, le=12)
+    budget: int = Field(2400, ge=400, le=4000)
+    response_format: str = Field("text", description="text | json")
+    use_cache: bool = True
+
+
+class ChatResponse(AnswerResponse):
+    """多轮响应：额外给出改写后的检索 query、用到的历史与结构化产物。"""
+
+    rewritten_query: str = ""
+    history_used: bool = False
+    structured: Optional[Dict[str, Any]] = None
+
+
 class StatsResponse(BaseModel):
     cache_size: int
     cache_max: int
     stage: str
     index_chunks: int = 0
+    sessions: int = 0
+    trace: Dict[str, Any] = Field(default_factory=dict)
 
 
 # ------------------------------------------------------------------ 资源
@@ -157,13 +188,116 @@ def create_app(provider: Callable[[], Dict[str, Any]] = load_resources) -> FastA
             cache_max=CACHE_MAX,
             stage=str(res["cfg"].get("project.stage", "")),
             index_chunks=chunks,
+            sessions=len(SESSIONS),
+            trace=TRACER.summary(),
         )
+
+    def _pipeline(
+        trace: Any,
+        res: Dict[str, Any],
+        question: str,
+        mode: str,
+        top_n: int,
+        budget: int,
+        min_read: int = 0,
+    ) -> Dict[str, Any]:
+        """跑一遍问答链，返回上下文、答案与引用。各阶段都在 trace 里计时。"""
+        retriever, generator = res["retriever"], res["generator"]
+        contexts: List[str] = []
+        titles: List[str] = []
+        answer_text = ""
+        used = 0
+        citations: List[int] = []
+
+        if mode == "agent":
+            from medical_rag.agent import make_agent
+            from run_agent import offline_policy
+
+            use_api = isinstance(generator, DeepSeekGenerator)
+            with TRACER.span(trace, "agent", steps=0):
+                agent, _ = make_agent(
+                    generator.chat if use_api else offline_policy,
+                    retriever,
+                    reranker=getattr(retriever, "reranker", None),
+                    max_steps=8,
+                    budget_chars=budget,
+                    min_read=min_read,
+                )
+                run = agent.run(question)
+                contexts, titles, answer_text = run.contexts, run.titles, run.answer
+                used = run.used_chars
+                trace.spans[-1].fields.update(
+                    steps=len(run.steps), tool_calls=sum(run.tool_calls.values())
+                )
+                trace.fields["agent_steps"] = [
+                    {"action": s.action or "parse_error", "thought": (s.thought or "")[:60]}
+                    for s in run.steps
+                ]
+        else:
+            with TRACER.span(trace, "retrieve", top_n=top_n):
+                hits = retriever.retrieve(question, top_k=max(res["candidate_k"], top_n))
+            contexts, titles, used = build_contexts(hits, budget, top_n)
+            with TRACER.span(trace, "generate", chars=used):
+                gen = generator.answer(question, contexts, titles, mode)
+                answer_text = gen.answer
+                citations = list(gen.citations)
+        return {
+            "contexts": contexts,
+            "titles": titles,
+            "answer": answer_text,
+            "citations": citations,
+            "used_chars": used,
+        }
+
+    def _structured(
+        generator: Any,
+        question: str,
+        contexts: List[str],
+        titles: List[str],
+        answer_text: str,
+        citations: List[int],
+        used: int,
+        unsupported: List[str],
+        grounding: float,
+        history: str = "",
+    ) -> Optional[Dict[str, Any]]:
+        """让模型按 schema 回答；模型不配合时退化为服务端组装，不丢回答。"""
+        raw = None
+        if hasattr(generator, "chat"):
+            prompt = (
+                f"{build_context_block(contexts, titles)}\n\n"
+                + (f"{history}\n\n" if history else "")
+                + f"问题：{question}\n\n{render_json_instruction(len(contexts))}"
+            )
+            try:
+                raw = generator.chat([{"role": "user", "content": prompt}])
+            except Exception:
+                raw = None
+        model = parse_structured_answer(
+            raw or "",
+            n_contexts=len(contexts),
+            titles=titles,
+            used_chars=used,
+            grounding=grounding,
+            unsupported=unsupported,
+        )
+        if model is None:  # 退化：用已有文本答案组装，字段仍然完整
+            model = parse_structured_answer(
+                json.dumps({"answer": answer_text, "citations": citations}, ensure_ascii=False),
+                n_contexts=len(contexts),
+                titles=titles,
+                used_chars=used,
+                grounding=grounding,
+                unsupported=unsupported,
+            )
+        return model.model_dump() if model else None
 
     @app.post("/v1/answer", response_model=AnswerResponse)
     def answer(req: AnswerRequest, x_api_key: Optional[str] = Header(default=None)) -> AnswerResponse:
         _auth(x_api_key)
         started = time.time()
         request_id = uuid.uuid4().hex[:12]
+        trace = TRACER.new_trace("answer", trace_id=request_id, mode=req.mode)
         cache_key = json.dumps(
             [req.question, req.mode, req.top_n, req.budget, req.min_read], ensure_ascii=False
         )
@@ -178,41 +312,21 @@ def create_app(provider: Callable[[], Dict[str, Any]] = load_resources) -> FastA
                 return AnswerResponse(**payload)
 
         res = resources()
-        retriever, generator = res["retriever"], res["generator"]
-        contexts: List[str] = []
-        titles: List[str] = []
-        answer_text = ""
-        used = 0
-        citations: List[int] = []
-
+        retriever = res["retriever"]
         try:
-            if req.mode == "agent":
-                from medical_rag.agent import make_agent
-                from run_agent import offline_policy
-
-                use_api = isinstance(generator, DeepSeekGenerator)
-                agent, _ = make_agent(
-                    generator.chat if use_api else offline_policy,
-                    retriever,
-                    reranker=getattr(retriever, "reranker", None),
-                    max_steps=8,
-                    budget_chars=req.budget,
-                    min_read=req.min_read,
-                )
-                run = agent.run(req.question)
-                contexts, titles, answer_text = run.contexts, run.titles, run.answer
-                used = run.used_chars
-            else:
-                hits = retriever.retrieve(req.question, top_k=max(res["candidate_k"], req.top_n))
-                contexts, titles, used = build_contexts(hits, req.budget, req.top_n)
-                gen = generator.answer(req.question, contexts, titles, req.mode)
-                answer_text = gen.answer
-                citations = list(gen.citations)
+            out = _pipeline(trace, res, req.question, req.mode, req.top_n, req.budget, req.min_read)
         except Exception as exc:
             _log("answer_error", request_id=request_id, error=str(exc))
+            TRACER.finish(trace)
             raise HTTPException(status_code=503, detail="模型或检索服务暂时不可用")
+        contexts = out["contexts"]
+        titles = out["titles"]
+        answer_text = out["answer"]
+        citations = out["citations"]
+        used = out["used_chars"]
 
-        result = verify_answer(answer_text, contexts, mode="flag")
+        with TRACER.span(trace, "verify", contexts=len(contexts)):
+            result = verify_answer(answer_text, contexts, mode="flag")
         payload = {
             "request_id": request_id,
             "answer": answer_text,
@@ -230,7 +344,7 @@ def create_app(provider: Callable[[], Dict[str, Any]] = load_resources) -> FastA
                 for v in result.verdicts
             ],
             "retrieval_mode": res["mode"],
-            "generator": type(generator).__name__,
+            "generator": type(res["generator"]).__name__,
             "used_chars": used,
             "latency_ms": int((time.time() - started) * 1000),
             "cached": False,
@@ -245,7 +359,109 @@ def create_app(provider: Callable[[], Dict[str, Any]] = load_resources) -> FastA
             latency_ms=payload["latency_ms"],
             cached=False,
         )
+        TRACER.finish(trace)
         return AnswerResponse(**payload)
+
+    @app.post("/v1/chat", response_model=ChatResponse)
+    def chat(req: ChatRequest, x_api_key: Optional[str] = Header(default=None)) -> ChatResponse:
+        """多轮问答：先做指代消解，再走同一条链；可选按 schema 返回结构化答案。"""
+        _auth(x_api_key)
+        started = time.time()
+        request_id = uuid.uuid4().hex[:12]
+        trace = TRACER.new_trace("chat", trace_id=request_id, session=req.session_id)
+
+        session = SESSIONS.get(req.session_id)
+        with TRACER.span(trace, "session"):
+            rewritten = session.rewrite(req.question)
+            history = session.history_block()
+
+        cache_key = json.dumps(
+            [req.session_id, req.question, req.mode, req.top_n, req.budget, req.response_format],
+            ensure_ascii=False,
+        )
+        if req.use_cache:
+            hit = _cache_get(cache_key)
+            if hit is not None:
+                payload = dict(hit)
+                payload["request_id"] = request_id
+                payload["cached"] = True
+                payload["latency_ms"] = int((time.time() - started) * 1000)
+                _log("chat", request_id=request_id, cached=True)
+                TRACER.finish(trace)
+                return ChatResponse(**payload)
+
+        res = resources()
+        try:
+            out = _pipeline(trace, res, rewritten, req.mode, req.top_n, req.budget)
+        except Exception as exc:
+            _log("chat_error", request_id=request_id, error=str(exc))
+            TRACER.finish(trace)
+            raise HTTPException(status_code=503, detail="模型或检索服务暂时不可用")
+
+        with TRACER.span(trace, "verify", contexts=len(out["contexts"])):
+            result = verify_answer(out["answer"], out["contexts"], mode="flag")
+        claims = [v for v in result.verdicts if getattr(v, "is_claim", True)]
+        grounding = (sum(1 for v in claims if v.supported) / len(claims)) if claims else 0.0
+
+        structured = None
+        if req.response_format == "json":
+            with TRACER.span(trace, "structured"):
+                structured = _structured(
+                    res["generator"],
+                    req.question,
+                    out["contexts"],
+                    out["titles"],
+                    out["answer"],
+                    out["citations"],
+                    out["used_chars"],
+                    list(result.unsupported_sentences),
+                    grounding,
+                    history=history,
+                )
+
+        session.add(
+            req.question,
+            out["answer"],
+            titles=out["titles"],
+            citations=out["citations"],
+            contexts=len(out["contexts"]),
+        )
+        payload = {
+            "request_id": request_id,
+            "answer": out["answer"],
+            "refused": result.refused if hasattr(result, "refused") else False,
+            "citations": out["citations"],
+            "titles": out["titles"],
+            "contexts": out["contexts"],
+            "verdicts": [
+                Verdict(
+                    sentence=v.text,
+                    supported=v.supported,
+                    coverage=round(v.coverage, 3),
+                    unsupported_numbers=list(v.unsupported_numbers),
+                ).model_dump()
+                for v in result.verdicts
+            ],
+            "retrieval_mode": res["mode"],
+            "generator": type(res["generator"]).__name__,
+            "used_chars": out["used_chars"],
+            "latency_ms": int((time.time() - started) * 1000),
+            "cached": False,
+            "rewritten_query": rewritten,
+            "history_used": bool(history),
+            "structured": structured,
+        }
+        if req.use_cache:
+            _cache_put(cache_key, dict(payload))
+        _log(
+            "chat",
+            request_id=request_id,
+            session=req.session_id,
+            rewritten=rewritten != req.question,
+            latency_ms=payload["latency_ms"],
+        )
+        TRACER.finish(trace)
+        return ChatResponse(**payload)
 
     return app
 

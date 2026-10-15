@@ -119,3 +119,100 @@ def test_stats_reports_cache_and_index(client):
     stats = client.get("/v1/stats").json()
     assert stats["cache_size"] >= 1
     assert stats["index_chunks"] == 9404
+
+
+def test_stats_reports_trace_summary(client):
+    client.post("/v1/answer", json={"question": "剂量？"})
+    trace = client.get("/v1/stats").json()["trace"]
+    assert trace["count"] >= 1
+    assert "retrieve" in trace["span_ms_mean"]
+
+
+# ------------------------------------------------------------------ 多轮
+
+
+class FakeJSONGenerator(FakeGenerator):
+    """带 chat 的替身，用于验证「模型按 schema 输出」这条路径。"""
+
+    def chat(self, messages):
+        return '```json\n{"answer": "起始剂量 5 mg[1]", "citations": [1], "refused": false}\n```'
+
+
+def _json_resources():
+    res = _fake_resources()
+    res["generator"] = FakeJSONGenerator()
+    return res
+
+
+@pytest.fixture()
+def clean_sessions():
+    serve.SESSIONS._sessions.clear()
+    serve.SESSIONS._order.clear()
+    yield
+    serve.SESSIONS._sessions.clear()
+    serve.SESSIONS._order.clear()
+
+
+def test_chat_rewrites_followup(clean_sessions):
+    app = serve.create_app(provider=_fake_resources)
+    with TestClient(app) as c:
+        c.post("/v1/chat", json={"session_id": "s1", "question": "妊娠期急性阑尾炎怎么处理"})
+        second = c.post("/v1/chat", json={"session_id": "s1", "question": "那疗程多久？"}).json()
+    assert second["rewritten_query"] != "那疗程多久？"
+    assert "阑尾炎" in second["rewritten_query"]
+    assert second["history_used"] is True
+
+
+def test_chat_first_turn_has_no_history(clean_sessions):
+    app = serve.create_app(provider=_fake_resources)
+    with TestClient(app) as c:
+        first = c.post("/v1/chat", json={"session_id": "s2", "question": "妊娠期急性阑尾炎怎么处理"}).json()
+    assert first["history_used"] is False
+    assert first["rewritten_query"] == "妊娠期急性阑尾炎怎么处理"
+
+
+def test_chat_text_format_has_no_structured_field(clean_sessions):
+    app = serve.create_app(provider=_fake_resources)
+    with TestClient(app) as c:
+        data = c.post("/v1/chat", json={"session_id": "s3", "question": "剂量？"}).json()
+    assert data["structured"] is None
+
+
+def test_chat_json_format_falls_back_to_server_side(clean_sessions):
+    """生成器不支持 chat 时也要给出完整结构，不能返回 null。"""
+    app = serve.create_app(provider=_fake_resources)
+    with TestClient(app) as c:
+        data = c.post(
+            "/v1/chat", json={"session_id": "s4", "question": "剂量？", "response_format": "json"}
+        ).json()
+    assert data["structured"] is not None
+    assert data["structured"]["citations"] == [1]
+    assert data["structured"]["answer"]
+
+
+def test_chat_json_format_uses_model_output(clean_sessions):
+    app = serve.create_app(provider=_json_resources)
+    with TestClient(app) as c:
+        data = c.post(
+            "/v1/chat", json={"session_id": "s5", "question": "剂量？", "response_format": "json"}
+        ).json()
+    assert data["structured"]["answer"] == "起始剂量 5 mg[1]"
+    assert data["structured"]["citations"] == [1]
+
+
+def test_chat_requires_api_key_when_env_set(monkeypatch, clean_sessions):
+    monkeypatch.setenv("SERVICE_API_KEY", "secret")
+    app = serve.create_app(provider=_fake_resources)
+    with TestClient(app) as c:
+        denied = c.post("/v1/chat", json={"question": "剂量？"})
+        ok = c.post("/v1/chat", json={"question": "剂量？"}, headers={"X-API-Key": "secret"})
+    assert denied.status_code == 401
+    assert ok.status_code == 200
+
+
+def test_stats_counts_sessions(clean_sessions):
+    app = serve.create_app(provider=_fake_resources)
+    with TestClient(app) as c:
+        c.post("/v1/chat", json={"session_id": "s6", "question": "剂量？"})
+        stats = c.get("/v1/stats").json()
+    assert stats["sessions"] == 1

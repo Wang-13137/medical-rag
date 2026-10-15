@@ -4,8 +4,9 @@
 
 project:
   name: medical-rag
-  # 阶段标识：W1 检索基线 / W2 清洗与策略横评 / W3 生成端 / W4 切片与蕴含闸门 / W5 Agent
-  stage: W5
+  # 阶段标识：W1 检索基线 / W2 清洗与策略横评 / W3 生成端 / W4 切片与蕴含闸门
+  #            W5 Agent / W6 工程收尾（服务化、MCP、编排图对照、多轮、可观测性）
+  stage: W6
 
 paths:
   # 清洗后的语料目录（scripts/clean_corpus.py 产出），建索引与检索都读这里
