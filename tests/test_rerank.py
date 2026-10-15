@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -97,15 +98,20 @@ def test_explain_reports_rank_change():
     assert rows[0]["rerank_score"] > rows[-1]["rerank_score"]
 
 
+# 真模型冒烟依赖本地已下载的 bge-reranker-base。
+# 不写死任何人的绝对路径：目录由环境变量 BGE_RERANKER_DIR 指定，未设置则跳过。
+_LOCAL_RERANKER = Path(os.environ.get("BGE_RERANKER_DIR", "")) if os.environ.get("BGE_RERANKER_DIR") else None
+
+
 @pytest.mark.skipif(
-    not Path(r"%USERPROFILE%/.cache/modelscope/models/BAAI--bge-reranker-base/snapshots/master").exists(),
-    reason="本机没下载 bge-reranker-base 时跳过真实模型冒烟",
+    _LOCAL_RERANKER is None or not _LOCAL_RERANKER.exists(),
+    reason="未设置 BGE_RERANKER_DIR 或目录不存在时跳过真实模型冒烟",
 )
 def test_real_reranker_discriminates():
     """真模型冒烟：相关句得分必须明显高于无关句。"""
     from medical_rag.rerank import CrossEncoderReranker
 
-    local = Path(r"%USERPROFILE%/.cache/modelscope/models/BAAI--bge-reranker-base/snapshots/master")
+    local = _LOCAL_RERANKER
     reranker = CrossEncoderReranker(local_model_dir=local, verbose=False)
     scores = reranker.score(
         "哮喘长期控制药物",

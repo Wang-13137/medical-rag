@@ -52,7 +52,11 @@ ReAct 智能体在 100 题上显著低于固定流水线。所有数字都在 `r
 统一使用隔离 venv，不要安装到系统 Python：
 
 ```powershell
-python -m pip install -r requirements.txt
+# 激活隔离 venv 后
+pip install -r requirements.txt
+
+# 未激活时用 venv 内解释器的绝对路径，例如：
+# <venv>/Scripts/python.exe -m pip install -r requirements.txt
 ```
 
 本机配置：**12 核 CPU、Windows、无 GPU**。
@@ -85,7 +89,7 @@ python -m pip install -r requirements.txt
 
 ```powershell
 $env:HF_ENDPOINT = "https://hf-mirror.com"          # 可选，本机已验证无效
-python -m pip install modelscope
+pip install modelscope
 python -c "from modelscope import snapshot_download; print(snapshot_download('BAAI/bge-small-zh-v1.5'))"
 ```
 
@@ -110,6 +114,11 @@ python -c "from modelscope import snapshot_download; print(snapshot_download('BA
 ---
 
 ## 三、准备数据
+
+> **复现须知**：本仓库**不随附指南原文**（合规考虑，见第十节），`data/raw`、`data/clean`、`data/index` 均不在版本库内。
+> - 只想验证链路跑通：用仓库自带的 `data/smoke/` 样例数据即可（各脚本加 `--smoke`）。
+> - 想复现本文的全部检索／生成／Agent 数字：需自备 16 份中文临床指南文本放入 `data/raw/`（来源清单见第十节），再按第四、五节清洗建索引。
+> - 评测集 `data/eval/benchmark_v1.json`（100 题）随仓库提供，题目与标准答案均为自建短句；自备语料后可直接复跑，无需重新出题。
 
 支持的格式：`.pdf`、`.docx`、`.txt`、`.md`、`.markdown`，会递归扫描子目录。
 
@@ -149,7 +158,7 @@ data/smoke/     ← 20 条样例条目（见下节说明）
 ## 五、建索引
 
 ```powershell
-cd <repo-root>
+cd <仓库根目录>
 
 # 用 smoke 样例数据跑通全流程
 python scripts/build_index.py --smoke

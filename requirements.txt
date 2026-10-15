@@ -1,7 +1,10 @@
 # 中文医疗 RAG 系统 —— W1–W6 全部依赖
-# 全部安装到隔离 venv：python
+# 建议安装到隔离 venv（不要用系统 Python）：
+#   python -m venv .venv && .venv/Scripts/activate
 #   pip install -r requirements.txt
-# torch 走 CPU 版本，本机 12 核无 GPU，保持 torch==2.14.1+cpu 不变以避免重装大包。
+# torch 走 CPU 版本，保持 torch==2.14.1+cpu 不变以避免重装大包。
+#   若直接安装找不到该版本，先加 CPU 源：
+#   pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
 
 torch==2.14.1+cpu
 

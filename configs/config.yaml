@@ -74,7 +74,8 @@ rerank:
   # W2：cross-encoder 精排。实测能把答案关键串全中率从 0.500 提到 0.600（见 README 第十一节）
   enabled: true
   model_name: BAAI/bge-reranker-base
-  local_model_dir: %USERPROFILE%/.cache/modelscope/models/BAAI--bge-reranker-base/snapshots/master
+  # 可选：已下载到本地的模型快照目录，留空则走 modelscope/HF 缓存自动解析
+  local_model_dir: ""
   device: cpu
   batch_size: 8
   max_length: 512
