@@ -21,7 +21,12 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from medical_rag.config import load_config  # noqa: E402
-from medical_rag.generate import DeepSeekGenerator, EchoGenerator, load_generator  # noqa: E402
+from medical_rag.generate import (  # noqa: E402
+    DeepSeekGenerator,
+    EchoGenerator,
+    load_generator,
+    parse_citations,
+)
 from medical_rag.index import FaissIndex  # noqa: E402
 from medical_rag.langgraph_flow import build_graph  # noqa: E402
 from eval_benchmark import make_retriever  # noqa: E402
@@ -107,6 +112,10 @@ def main() -> int:
                 "contexts": result["contexts"],
                 "titles": result["titles"],
                 "used_chars": result["used_chars"],
+                # 与 run_generation.py 对齐的别名，便于共用 eval_generation.py
+                "context_titles": result["titles"],
+                "context_chars": result["used_chars"],
+                "citations": parse_citations(result["answer"], max_index=len(result["contexts"])),
                 "answer_keys": item.get("answer_keys") or [],
                 "refused": result["refused"],
                 "steps": result["trace"],

@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
@@ -44,6 +45,37 @@ class CrossEncoderReranker:
         self.local_model_dir = str(local_model_dir) if local_model_dir else None
         self._load(verbose)
 
+    def _resolve_source(self, verbose: bool = False) -> str:
+        """确定精排模型的加载来源。
+
+        优先级：显式传入的本地目录 > 环境变量 BGE_RERANKER_DIR > ModelScope 本地缓存
+        > 模型名（联网下载）。
+
+        之所以不写死任何人的绝对路径：仓库是公开的，快照目录因人而异；
+        ModelScope 缓存这一档让国内用户在下载过之后完全离线可用。
+        """
+        if self.local_model_dir and Path(self.local_model_dir).exists():
+            return str(self.local_model_dir)
+
+        env_dir = os.environ.get("BGE_RERANKER_DIR", "")
+        if env_dir and Path(env_dir).exists():
+            if verbose:
+                print(f"[rerank] 使用环境变量指定的模型目录：{env_dir}")
+            return env_dir
+
+        try:
+            from modelscope import snapshot_download as ms_download
+
+            ms_path = ms_download(self.model_name, local_files_only=True)
+            if ms_path and Path(ms_path).exists():
+                if verbose:
+                    print(f"[rerank] 命中 ModelScope 缓存：{ms_path}")
+                return str(ms_path)
+        except Exception:
+            pass
+
+        return self.model_name
+
     def _load(self, verbose: bool) -> None:
         try:
             import torch
@@ -52,9 +84,18 @@ class CrossEncoderReranker:
             raise ImportError("重排需要 transformers 与 torch，请先安装") from exc
 
         self.torch = torch
-        source = self.local_model_dir or self.model_name
-        self.tokenizer = AutoTokenizer.from_pretrained(source)
-        self.model = AutoModelForSequenceClassification.from_pretrained(source)
+        source = self._resolve_source(verbose)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(source)
+            self.model = AutoModelForSequenceClassification.from_pretrained(source)
+        except OSError as exc:
+            raise OSError(
+                f"无法加载精排模型（尝试路径：{source}）。国内网络通常连不上 huggingface.co，"
+                f"请先用 modelscope 下载：python -c \"from modelscope import snapshot_download; "
+                f"print(snapshot_download('{self.model_name}'))\"，然后任选其一："
+                f"① 设置环境变量 BGE_RERANKER_DIR 指向快照目录；"
+                f"② 在 configs/config.yaml 的 rerank.local_model_dir 填入该路径。"
+            ) from exc
         self.model.eval()
         if self.device != "cpu":
             self.model.to(self.device)

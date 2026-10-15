@@ -1,0 +1,99 @@
+{
+  "left": "LangGraph",
+  "right": "ReAct智能体",
+  "n_pairs": 30,
+  "scopes": {
+    "全部题": {
+      "gold_key_recall": {
+        "left_mean": 0.8,
+        "right_mean": 0.5167,
+        "diff": 0.2833,
+        "ci95": [
+          0.1,
+          0.4667
+        ],
+        "significant": true
+      },
+      "citation_precision": {
+        "left_mean": 0.7839,
+        "right_mean": 0.5944,
+        "diff": 0.1894,
+        "ci95": [
+          0.0122,
+          0.3639
+        ],
+        "significant": true
+      },
+      "unsupported_number_rate": {
+        "left_mean": 0.0,
+        "right_mean": 0.0,
+        "diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "significant": false
+      },
+      "full_hit": {
+        "left_mean": 0.7667,
+        "right_mean": 0.4,
+        "b": 13,
+        "c": 2,
+        "p": 0.0074
+      },
+      "refused": {
+        "left_mean": 0.0667,
+        "right_mean": 0.1667,
+        "b": 2,
+        "c": 5,
+        "p": 0.4531
+      }
+    },
+    "仅可答题": {
+      "gold_key_recall": {
+        "left_mean": 0.8,
+        "right_mean": 0.5167,
+        "diff": 0.2833,
+        "ci95": [
+          0.1,
+          0.4667
+        ],
+        "significant": true
+      },
+      "citation_precision": {
+        "left_mean": 0.7839,
+        "right_mean": 0.5944,
+        "diff": 0.1894,
+        "ci95": [
+          0.0122,
+          0.3639
+        ],
+        "significant": true
+      },
+      "unsupported_number_rate": {
+        "left_mean": 0.0,
+        "right_mean": 0.0,
+        "diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "significant": false
+      },
+      "full_hit": {
+        "left_mean": 0.7667,
+        "right_mean": 0.4,
+        "b": 13,
+        "c": 2,
+        "p": 0.0074
+      },
+      "refused": {
+        "left_mean": 0.0667,
+        "right_mean": 0.1667,
+        "b": 2,
+        "c": 5,
+        "p": 0.4531
+      }
+    }
+  }
+}
