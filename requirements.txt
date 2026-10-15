@@ -1,4 +1,4 @@
-# 中文医疗 RAG 系统 —— W1 阶段依赖
+# 中文医疗 RAG 系统 —— W1–W5 全部依赖
 # 全部安装到隔离 venv：python
 #   pip install -r requirements.txt
 # torch 走 CPU 版本，本机 12 核无 GPU，保持 torch==2.14.1+cpu 不变以避免重装大包。
@@ -20,11 +20,11 @@ tqdm==4.70.1
 
 pdfplumber==0.11.10         # PDF 解析
 python-docx==1.2.0          # docx 解析
-rank_bm25==0.2.2            # W2 的 BM25 检索，本阶段先装好
-jieba==0.42.1               # W2 的中文分词，本阶段先装好
+rank_bm25==0.2.2            # W2 的 BM25 检索
+jieba==0.42.1               # W2 的中文分词
+httpx==0.28.1               # W3 生成端直连 DeepSeek，不引入 SDK
 
 pytest==9.1.1
 
-# 以下依赖在 W1 不安装，留待后续阶段：
-# gradio / fastapi / uvicorn  —— W4 的 Web 服务
-# sentence-transformers 的重排模型 bge-reranker-base —— W3 的重排
+# 以下依赖当前未安装，留待后续：
+# gradio / fastapi / uvicorn  —— 演示界面与服务化

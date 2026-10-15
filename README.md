@@ -65,8 +65,9 @@ python -m pip install -r requirements.txt
 | modelscope | 1.40.2 | 新增，用于下载 bge 模型 |
 | pdfplumber | 0.11.10 | 新增 |
 | python-docx | 1.2.0 | 新增 |
-| rank_bm25 | 0.2.2 | 新增，W2 才用到，本阶段只装 |
-| jieba | 0.42.1 | 新增，W2 才用到，本阶段只装 |
+| rank_bm25 | 0.2.2 | W2 的 BM25 检索才用到，W1 先装好 |
+| jieba | 0.42.1 | W2 的中文分词才用到，W1 先装好 |
+| httpx | 0.28.1 | W3 生成端直连 DeepSeek 用，不引入 SDK |
 | pytest | 9.1.1 | 已存在 |
 
 ### 3. Embedding 模型下载与缓存位置
@@ -114,7 +115,7 @@ data/raw/       ← 真实知识库，由你自己放入
 data/smoke/     ← 20 条样例条目（见下节说明）
 ```
 
-如果原始数据是扫描版 PDF（没有文本层），pdfplumber 取不到文字，需要先做 OCR，本阶段未实现。
+如果原始数据是扫描版 PDF（没有文本层），pdfplumber 取不到文字，需要先做 OCR，当前未实现。
 
 ### 当前 `data/raw` 里放的是什么
 
