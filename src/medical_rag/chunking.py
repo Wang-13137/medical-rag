@@ -157,6 +157,120 @@ def build_sections(document: Document, heading_max_chars: int = 60) -> List[Sect
     return sections
 
 
+# ---------------------------------------------------------------- 句边界切分
+
+# 句末标点。刻意不含英文句点：指南里 "14 d."、"0.5 g"、"bid." 中的点号多为小数点或缩写点，
+# 按句末处理会把剂量剖开，反而制造跨切片问题。
+_SENTENCE_BREAKS = "。！？；!?;\n"
+# 句末标点后可能出现的收尾符号，一并归入本句，避免切片以半个引号结尾
+_CLOSING_MARKS = "”’」』》）】〉]}\"'"
+
+# 单个句子的硬上限：超过则强制按字符再切，防止一个超长段落独占切片把上下文预算打爆
+_DEFAULT_HARD_MAX_CHARS = 800
+
+
+def split_sentences(text: str) -> List[tuple[int, int]]:
+    """把正文切成句子，返回 [(start, end)] 字符区间，标点归属前一句。
+
+    换行也算句边界：清洗后的语料里表格行、列表项各占一行，
+    把它们整句保留能显著减少「一行被拦腰截断」的情况。
+    """
+    spans: List[tuple[int, int]] = []
+    start = 0
+    index = 0
+    total = len(text)
+    while index < total:
+        char = text[index]
+        if char in _SENTENCE_BREAKS:
+            end = index + 1
+            while end < total and text[end] in _CLOSING_MARKS:
+                end += 1
+            spans.append((start, end))
+            index = end
+            start = end
+        else:
+            index += 1
+    if start < total:
+        spans.append((start, total))
+    return spans
+
+
+def _explode_long_spans(
+    spans: List[tuple[int, int]], text: str, max_chars: int, overlap: int
+) -> List[tuple[int, int]]:
+    """把长度超过 max_chars 的句子按字符滑窗拆开，其余原样保留。"""
+    step = max(1, max_chars - overlap)
+    exploded: List[tuple[int, int]] = []
+    for start, end in spans:
+        if end - start <= max_chars:
+            exploded.append((start, end))
+            continue
+        cursor = start
+        while cursor < end:
+            stop = min(cursor + max_chars, end)
+            exploded.append((cursor, stop))
+            if stop >= end:
+                break
+            cursor += step
+    return exploded
+
+
+def _sentence_windows(
+    text: str, chunk_size: int, overlap: int, min_tail_chars: int, hard_max_chars: int
+) -> List[tuple[int, int]]:
+    """句子级打包：每个窗口由完整句子组成，绝不从句子中间切断。
+
+    与字符滑窗的两点差异：
+    1. 切点永远落在句末，长句要么整句成片，要么自己独占一片；
+    2. 重叠也是句级的——回退若干整句直到累计 overlap 个字符，
+       不会像字符滑窗那样把上一窗的半句话拼到下一窗开头。
+    """
+    spans = _explode_long_spans(
+        split_sentences(text), text, min(hard_max_chars, chunk_size), overlap
+    )
+    if not spans:
+        return []
+
+    def span_len(i: int) -> int:
+        return spans[i][1] - spans[i][0]
+
+    windows: List[tuple[int, int]] = []
+    start = 0
+    total_sentences = len(spans)
+    while start < total_sentences:
+        end = start
+        length = 0
+        while end < total_sentences:
+            # 第一句无论多长都收下，保证窗口始终有进展
+            if end > start and length + span_len(end) > chunk_size:
+                break
+            length += span_len(end)
+            end += 1
+
+        # 尾部余料太短则并入当前窗，避免产出碎片切片
+        remaining = spans[-1][1] - spans[end - 1][1]
+        if end < total_sentences and 0 < remaining < min_tail_chars:
+            windows.append((spans[start][0], spans[-1][1]))
+            break
+
+        windows.append((spans[start][0], spans[end - 1][1]))
+        if end >= total_sentences:
+            break
+
+        # 下一窗起点：从 end-1 往回退整句，累计到 overlap 个字符为止
+        new_start = end
+        accumulated = 0
+        cursor = end - 1
+        while cursor > start:
+            if accumulated >= overlap:
+                break
+            accumulated += span_len(cursor)
+            new_start = cursor
+            cursor -= 1
+        start = new_start if new_start > start else end
+    return windows
+
+
 def _sliding_windows(text: str, chunk_size: int, overlap: int, min_tail_chars: int) -> List[tuple[int, int]]:
     """生成字符级滑窗区间列表 [(start, end)]。
 
@@ -222,8 +336,10 @@ def chunk_document(
     min_tail_chars: int = 30,
     heading_max_chars: int = 60,
     prepend_heading_path: bool = True,
+    sentence_aware: bool = True,
+    hard_max_chars: int = _DEFAULT_HARD_MAX_CHARS,
 ) -> List[Chunk]:
-    """单文档切片：先标题再滑窗。"""
+    """单文档切片：先标题，再按（默认）句边界或（关闭时）字符滑窗切正文。"""
     if chunk_overlap >= chunk_size:
         raise ValueError(f"chunk_overlap({chunk_overlap}) 必须小于 chunk_size({chunk_size})")
 
@@ -237,7 +353,12 @@ def chunk_document(
                 _make_chunk(document, section, body, 0, len(body), len(chunks), prepend_heading_path)
             )
             continue
-        for char_start, char_end in _sliding_windows(body, chunk_size, chunk_overlap, min_tail_chars):
+        windows = (
+            _sentence_windows(body, chunk_size, chunk_overlap, min_tail_chars, hard_max_chars)
+            if sentence_aware
+            else _sliding_windows(body, chunk_size, chunk_overlap, min_tail_chars)
+        )
+        for char_start, char_end in windows:
             chunks.append(
                 _make_chunk(
                     document,
@@ -269,4 +390,6 @@ def chunk_documents_from_config(documents: Sequence[Document], cfg) -> List[Chun
         min_tail_chars=int(cfg.get("chunking.min_tail_chars", 30)),
         heading_max_chars=int(cfg.get("chunking.heading_max_chars", 60)),
         prepend_heading_path=bool(cfg.get("chunking.prepend_heading_path", True)),
+        sentence_aware=bool(cfg.get("chunking.sentence_aware", True)),
+        hard_max_chars=int(cfg.get("chunking.hard_max_chars", _DEFAULT_HARD_MAX_CHARS)),
     )

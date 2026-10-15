@@ -34,6 +34,12 @@ chunking:
   heading_max_chars: 60
   # 是否把标题层级路径拼进切片正文（有利于检索召回）
   prepend_heading_path: true
+  # 句边界对齐：切点永远落在句末，重叠也按整句回退。
+  # 解决的问题是字符滑窗会把一条长推荐意见拦腰截断，导致关键串跨切片。
+  # false 时退回 W1 的纯字符滑窗，供对照实验复现
+  sentence_aware: true
+  # 单个句子的硬上限，超过则按字符再切，避免超长段落独占上下文预算
+  hard_max_chars: 800
 
 embedding:
   model_name: BAAI/bge-small-zh-v1.5

@@ -190,10 +190,17 @@ def main() -> int:
     ap.add_argument("--budget", type=int, default=2400, help="上下文字符预算")
     ap.add_argument("--top-n", type=int, default=8, help="进入上下文的最大切片数")
     ap.add_argument("--candidate-k", type=int, default=40, help="精排候选数")
+    ap.add_argument("--index-path", default=None, help="覆盖配置里的索引路径（用于对照不同切片策略）")
+    ap.add_argument("--meta-path", default=None, help="覆盖配置里的切片元数据路径")
     ap.add_argument("--out", default="reports/benchmark_eval_v1.json")
     args = ap.parse_args()
 
-    cfg = load_config(args.config)
+    overrides = {}
+    if args.index_path:
+        overrides["paths.index_path"] = args.index_path
+    if args.meta_path:
+        overrides["paths.meta_path"] = args.meta_path
+    cfg = load_config(args.config, overrides)
     bench = json.load(open(args.benchmark, encoding="utf-8"))
     items = bench["items"]
     answerable = [q for q in items if q.get("type") != "unanswerable"]

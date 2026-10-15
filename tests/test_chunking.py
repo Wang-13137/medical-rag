@@ -5,7 +5,13 @@ from __future__ import annotations
 
 import pytest
 
-from medical_rag.chunking import build_sections, chunk_document, chunk_documents_from_config, detect_heading
+from medical_rag.chunking import (
+    build_sections,
+    chunk_document,
+    chunk_documents_from_config,
+    detect_heading,
+    split_sentences,
+)
 from medical_rag.ingest import Document, LineBlock
 
 
@@ -30,7 +36,10 @@ def test_long_text_is_split_into_multiple_chunks():
     body = "血糖长期控制不佳会显著增加微血管与大血管并发症的发生风险。" * 20  # 约 560 字
     doc = _make_doc([body])
 
-    chunks = chunk_document(doc, chunk_size=200, chunk_overlap=50, prepend_heading_path=False)
+    # 字符滑窗路径（sentence_aware=False）
+    chunks = chunk_document(
+        doc, chunk_size=200, chunk_overlap=50, prepend_heading_path=False, sentence_aware=False
+    )
 
     assert len(chunks) > 1, "长文本应被切成多个切片"
     assert all(len(chunk.text) <= 200 for chunk in chunks), "单个切片长度不得超过 chunk_size"
@@ -47,7 +56,13 @@ def test_chunk_overlap_exact():
 
     size, overlap = 200, 50
     doc = _make_doc([body])
-    chunks = chunk_document(doc, chunk_size=size, chunk_overlap=overlap, prepend_heading_path=False)
+    chunks = chunk_document(
+        doc,
+        chunk_size=size,
+        chunk_overlap=overlap,
+        prepend_heading_path=False,
+        sentence_aware=False,
+    )
     assert len(chunks) > 2
 
     for previous, current in zip(chunks, chunks[1:]):
@@ -133,15 +148,30 @@ def test_build_sections_groups_body_under_heading():
 # ---------------------------------------------------------------- 6. 配置驱动与参数校验
 
 def test_chunk_documents_from_config_uses_yaml(config):
-    doc = _make_doc(["## 概述", "甲" * 1000])
+    """默认配置走句边界对齐：切点落在句末，重叠按整句回退。"""
+    body = "".join(f"第{index}条推荐意见内容用于占位。" for index in range(40))
+    doc = _make_doc(["## 概述", body])
     chunks = chunk_documents_from_config([doc], config)
 
     size = int(config.get("chunking.chunk_size"))
-    overlap = int(config.get("chunking.chunk_overlap"))
     heading_budget = 60  # 标题前缀占用的字符余量
 
     assert len(chunks) > 1
     assert all(len(chunk.text) <= size + heading_budget for chunk in chunks)
+    # 每个切片都以完整句子收尾，不会从句子中间断开
+    assert all(chunk.text.endswith("。") for chunk in chunks)
+
+
+def test_config_can_fall_back_to_char_window(root_dir):
+    """关掉 sentence_aware 后应退回固定步长的字符滑窗。"""
+    from medical_rag.config import load_config
+
+    cfg = load_config(root_dir / "configs" / "config.yaml", {"chunking.sentence_aware": False})
+    doc = _make_doc(["## 概述", "甲" * 1000])
+
+    chunks = chunk_documents_from_config([doc], cfg)
+    size = int(cfg.get("chunking.chunk_size"))
+    overlap = int(cfg.get("chunking.chunk_overlap"))
     assert chunks[1].char_start - chunks[0].char_start == size - overlap
 
 
@@ -149,3 +179,75 @@ def test_invalid_overlap_raises():
     doc = _make_doc(["甲" * 500])
     with pytest.raises(ValueError):
         chunk_document(doc, chunk_size=100, chunk_overlap=100)
+
+
+# ---------------------------------------------------------------- 7. 句边界对齐切片
+
+def test_split_sentences_keeps_trailing_punctuation():
+    text = "首选生活方式干预。若效果不佳，加用二甲双胍。"
+    spans = split_sentences(text)
+    assert [text[start:end] for start, end in spans] == [
+        "首选生活方式干预。",
+        "若效果不佳，加用二甲双胍。",
+    ]
+
+
+def test_split_sentences_ignores_decimal_point():
+    """剂量里的小数点不能当句末，否则 "0.5 g" 会被剖开。"""
+    text = "起始剂量为 0.5 g，每日两次。根据血糖调整。"
+    spans = split_sentences(text)
+    assert len(spans) == 2
+    assert text[spans[0][0] : spans[0][1]] == "起始剂量为 0.5 g，每日两次。"
+
+
+def test_sentence_aware_never_cuts_inside_sentence():
+    """句对齐的核心保证：任何切片都以句末收尾，长推荐句整句成片。"""
+    long_recommendation = (
+        "对于幽门螺杆菌根除治疗，推荐使用铋剂四联方案，"
+        "标准剂量质子泵抑制剂联合两种抗生素与铋剂，疗程为 14 d。"
+    )
+    filler = "其余内容用于把文本撑到需要切分的程度。" * 6
+    body = filler + long_recommendation
+    doc = _make_doc([body])
+
+    chunks = chunk_document(
+        doc, chunk_size=150, chunk_overlap=30, prepend_heading_path=False, sentence_aware=True
+    )
+    assert len(chunks) > 1
+    for chunk in chunks:
+        assert chunk.text.endswith("。"), f"切片应以句末收尾，实际：{chunk.text[-20:]!r}"
+
+    # 关键串必须在某一个切片里完整出现，而不是跨切片拼起来才完整
+    joined = [chunk.text for chunk in chunks if "疗程为 14 d" in chunk.text]
+    assert joined, "完整推荐句应在单个切片内可检索到"
+    assert all("推荐使用铋剂四联方案" in text for text in joined)
+
+
+def test_sentence_aware_makes_progress_and_covers_text():
+    """句窗口必须单调前进且首尾不丢字（防止回退逻辑写错导致死循环或漏字）。"""
+    body = "".join(f"第{index}条推荐意见，内容用于占位。" for index in range(80))
+    doc = _make_doc([body])
+    chunks = chunk_document(
+        doc, chunk_size=200, chunk_overlap=60, prepend_heading_path=False, sentence_aware=True
+    )
+    assert len(chunks) > 3
+    assert chunks[0].char_start == 0
+    assert chunks[-1].char_end == len(body)
+    for previous, current in zip(chunks, chunks[1:]):
+        assert current.char_start > previous.char_start, "窗口必须单调前进"
+        assert current.char_start < previous.char_end, "相邻窗口应保持重叠"
+
+
+def test_extremely_long_sentence_is_capped_by_hard_max():
+    """没有句末标点的超长段落不能无限膨胀，需按 hard_max_chars 兜底切开。"""
+    doc = _make_doc(["甲" * 2000])
+    chunks = chunk_document(
+        doc,
+        chunk_size=300,
+        chunk_overlap=60,
+        prepend_heading_path=False,
+        sentence_aware=True,
+        hard_max_chars=800,
+    )
+    assert len(chunks) > 1
+    assert max(len(chunk.text) for chunk in chunks) <= 800

@@ -38,6 +38,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--index-path", default=None, help="覆盖配置里的 paths.index_path")
     parser.add_argument("--meta-path", default=None, help="覆盖配置里的 paths.meta_path")
     parser.add_argument("--smoke", action="store_true", help="使用 data/smoke 样例数据")
+    parser.add_argument(
+        "--char-window",
+        action="store_true",
+        help="退回 W1 的纯字符滑窗切片（关闭句边界对齐），用于对照实验",
+    )
     parser.add_argument("--quiet", action="store_true", help="不打印模型与入库过程信息")
     return parser.parse_args()
 
@@ -59,6 +64,8 @@ def main() -> int:
         overrides["paths.meta_path"] = args.meta_path
     if args.data_dir:
         overrides["paths.data_dir"] = args.data_dir
+    if args.char_window:
+        overrides["chunking.sentence_aware"] = False
 
     cfg = load_config(args.config, overrides)
     # --smoke 未显式给出数据目录时，切到配置里的样例数据目录
@@ -89,9 +96,10 @@ def main() -> int:
         print("[build] 切片结果为空，任务终止")
         return 1
     avg_len = sum(len(chunk.text) for chunk in chunks) / len(chunks)
+    mode = "句子对齐" if cfg.get("chunking.sentence_aware", True) else "字符滑窗"
     print(
         f"[build] 切片完成：{len(chunks)} 片，平均 {avg_len:.0f} 字符"
-        f"（chunk_size={cfg.get('chunking.chunk_size')}, overlap={cfg.get('chunking.chunk_overlap')}）"
+        f"（{mode}，chunk_size={cfg.get('chunking.chunk_size')}, overlap={cfg.get('chunking.chunk_overlap')}）"
     )
 
     # 第三步：向量化
@@ -111,6 +119,8 @@ def main() -> int:
             "chunk_size": cfg.get("chunking.chunk_size"),
             "chunk_overlap": cfg.get("chunking.chunk_overlap"),
             "prepend_heading_path": cfg.get("chunking.prepend_heading_path"),
+            "sentence_aware": cfg.get("chunking.sentence_aware", True),
+            "hard_max_chars": cfg.get("chunking.hard_max_chars"),
         },
         "source_dir": str(data_dir),
         "num_documents": len(documents),
