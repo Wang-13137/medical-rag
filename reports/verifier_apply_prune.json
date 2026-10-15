@@ -1,0 +1,49 @@
+{
+  "counts": {
+    "total": 100,
+    "answerable_scored": 85,
+    "unanswerable": 15
+  },
+  "actions": {
+    "pass": 90,
+    "refused": 3,
+    "pruned": 7
+  },
+  "changed_rate": 0.1,
+  "answerable": {
+    "key_recall_before": 0.8137,
+    "key_recall_after": 0.7961,
+    "key_recall_delta": -0.0176,
+    "unsupported_number_rate_before": 0.0118,
+    "unsupported_number_rate_after": 0.0118,
+    "items_losing_recall": 2
+  },
+  "unanswerable": {
+    "refusal_broken": 0
+  },
+  "lost_detail": [
+    {
+      "id": "QA034",
+      "before": 1.0,
+      "after": 0.0,
+      "action": "refused",
+      "dropped": [
+        "- 替尔泊肽的每周给药剂量范围为2.5~15.0 mg，每周1次 [1]。",
+        "- 片段[5]另列出“2.5 mg、5 mg”等规格信息，但未明确为每周给药剂量范围 [5]。"
+      ]
+    },
+    {
+      "id": "QA035",
+      "before": 1.0,
+      "after": 0.5,
+      "action": "pruned",
+      "dropped": [
+        "- 推荐起始剂量为50 mg，2次/d，适用于新诊断心衰、未服用过ACEI或ARB、既往使用低/中剂量ACEI或ARB等患者 [1][4]。"
+      ]
+    }
+  ],
+  "generated": "data/generated/generation_strict.jsonl",
+  "mode": "prune",
+  "threshold": 0.6,
+  "require_cited_support": false
+}

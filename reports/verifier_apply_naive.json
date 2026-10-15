@@ -1,0 +1,78 @@
+{
+  "counts": {
+    "total": 100,
+    "answerable_scored": 85,
+    "unanswerable": 15
+  },
+  "actions": {
+    "refused": 30,
+    "pass": 54,
+    "pruned": 16
+  },
+  "changed_rate": 0.46,
+  "answerable": {
+    "key_recall_before": 0.5706,
+    "key_recall_after": 0.5353,
+    "key_recall_delta": -0.0353,
+    "unsupported_number_rate_before": 0.0138,
+    "unsupported_number_rate_after": 0.0,
+    "items_losing_recall": 5
+  },
+  "unanswerable": {
+    "refusal_broken": 4
+  },
+  "lost_detail": [
+    {
+      "id": "QA001",
+      "before": 0.5,
+      "after": 0.0,
+      "action": "refused",
+      "dropped": [
+        "保守治疗仅适用于诊断不明确或存疑者，且需严密监测，失败后立即手术。",
+        "研究显示保守治疗增加流产（OR=3.057）、胎膜早破（OR=3.872）、脓毒症（3.1% vs 1.2%）、感染性休克（1.0% vs 0.1%）及腹膜炎（28.8% vs 19.8%）风险，复杂性阑尾炎非手术失败率高达73.5%。"
+      ]
+    },
+    {
+      "id": "QA005",
+      "before": 0.5,
+      "after": 0.0,
+      "action": "pruned",
+      "dropped": [
+        "根据指南推荐意见7，超声诊断急性阑尾炎时，阑尾增粗的管径阈值为阑尾最大前后径>6.0 mm（新生儿除外）。"
+      ]
+    },
+    {
+      "id": "QA034",
+      "before": 1.0,
+      "after": 0.0,
+      "action": "refused",
+      "dropped": [
+        "替尔泊肽每周给药剂量范围为2.5~15.0 mg，每周1次，皮下注射。"
+      ]
+    },
+    {
+      "id": "QA045",
+      "before": 0.5,
+      "after": 0.0,
+      "action": "refused",
+      "dropped": [
+        "幽门螺杆菌初次和再次根除治疗推荐铋剂四联方案（PPI+铋剂+2种抗生素），疗程10~14 d。",
+        "难治性感染可用铋剂四联经验性治疗，或药敏指导下个体化治疗。"
+      ]
+    },
+    {
+      "id": "QA058",
+      "before": 0.5,
+      "after": 0.0,
+      "action": "refused",
+      "dropped": [
+        "推荐高血压患者每日钠摄入量减少至 **2 000 mg/d 以下**（约相当于 **5 g 氯化钠**）。",
+        "最佳目标是 **<1.5 g/d**（约1茶勺盐）。"
+      ]
+    }
+  ],
+  "generated": "data/generated/generation_naive.jsonl",
+  "mode": "prune",
+  "threshold": 0.6,
+  "require_cited_support": false
+}
