@@ -38,7 +38,8 @@ ReAct 智能体在 100 题上显著低于固定流水线。所有数字都在 `r
 | 蕴含校验 | `src/medical_rag/verify.py`、`scripts/calibrate_verifier.py`、`scripts/apply_verifier.py` | 生成后逐句校验：数字溯源 + 字面覆盖；阈值由合成污染样本标定（第十六.2） |
 | 智能体层 | `src/medical_rag/agent.py`、`scripts/run_agent.py` | 手写 ReAct 主循环，把检索/精排/校验暴露为工具，带步数、预算、欠召回护栏（第十七节） |
 
-**未完成**：Gradio 演示界面、FastAPI 服务化、情境元数据过滤（第十四节第 5 条）、留出验证（第 8 条）。
+**未完成**：FastAPI 服务化、情境元数据过滤（第十四节第 5 条）、留出验证（第 8 条）。
+演示界面已完成：`python scripts/gradio_demo.py`（见第十八节）。
 
 ---
 
@@ -783,9 +784,20 @@ python scripts/eval_generation.py data/generated/agent_react_minread5.jsonl `
   data/generated/agent_react.jsonl data/generated/generation_strict.jsonl `
   --out reports/generation_eval_agent_minread5.json
 
-# 测试（117 项）
+# 测试（128 项）
 python -m pytest tests/ -q
+
+# 演示界面（http://127.0.0.1:7860）
+python scripts/gradio_demo.py
+python scripts/gradio_demo.py --share    # 生成公网临时链接
 ```
+
+界面四个面板各自回答一个问题：
+**引用原文**（`[n]` 对应哪份指南的哪一小节）、
+**逐句依据校验**（每句话有没有依据、字面覆盖率、哪些数字没溯源到）、
+**检索明细**（精排后名次 vs 精排前名次，直接看出精排挪动了谁）、
+**Agent 轨迹**（每一步的工具、参数、观察）。
+可切换四种运行方式：受限提示词 / 无约束对照 / ReAct 智能体 / 智能体 + 欠召回护栏。
 
 评测报告全部落在 `reports/`，生成结果落在 `data/generated/`（已在 `.gitignore` 中，不入库）。
 
@@ -798,5 +810,6 @@ python -m pytest tests/ -q
 2. **情境元数据过滤**：在今天 README 第 5 条那条「慢性心衰查到急性心衰」上加 `情境` 字段，做硬过滤。
 3. **把延迟做成一等公民**：Agent 每题 4~5.5 次调用、7~22 秒的成本已经量化，
    下一步做调用合并（一次读完而不是逐轮读），并用同样的 100 题验证延迟下降不牺牲召回。
-4. **Gradio 演示**：把检索 → 精排 → 引用答案 → 拒答闸门四步可视化，顺带作为交付物门面。
+4. **把演示界面变成对照实验台**：现在的 Gradio 已经能切换四种运行方式，
+   下一步让它直接跑 benchmark 的抽样题并并排显示两条链路的答案，用于现场演示负结果。
 5. **留出验证**：补一组从未参与调参的 benchmark 子集，回应第 8 条限制。

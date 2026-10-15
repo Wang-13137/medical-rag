@@ -26,5 +26,7 @@ httpx==0.28.1               # W3 生成端直连 DeepSeek，不引入 SDK
 
 pytest==9.1.1
 
+gradio==6.30.0               # 演示界面（scripts/gradio_demo.py）
+
 # 以下依赖当前未安装，留待后续：
-# gradio / fastapi / uvicorn  —— 演示界面与服务化
+# fastapi / uvicorn  —— 服务化
