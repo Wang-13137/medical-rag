@@ -217,6 +217,7 @@ class ReActAgent:
         budget_chars: int = 2400,
         max_parse_retries: int = 2,
         refusal_text: str = REFUSAL_TEXT,
+        min_read: int = 0,
     ) -> None:
         self.chat_fn = chat_fn
         self.tools = {t.name: t for t in tools}
@@ -225,6 +226,8 @@ class ReActAgent:
         self.budget_chars = budget_chars
         self.max_parse_retries = max_parse_retries
         self.refusal_text = refusal_text
+        # 欠召回护栏：finish 之前至少要读过 min_read 条（拒答不受此限）
+        self.min_read = min_read
         self.evidence: List[Evidence] = []
         self.notes: Dict[str, str] = {}
 
@@ -321,6 +324,13 @@ class ReActAgent:
 
             if name == "finish":
                 answer = (result.payload or {}).get("answer", "")
+                gate = self._read_gate(answer)
+                if gate:
+                    # 还没读够：把答案退回，让模型补读，不算完成
+                    step.observation = gate
+                    messages.append({"role": "assistant", "content": raw})
+                    messages.append({"role": "user", "content": f"观察：{gate}"})
+                    continue
                 run.answer = answer
                 run.refused = self.refusal_text.replace(" ", "") in answer.replace(" ", "")
                 run.stop_reason = "finish"
@@ -347,6 +357,24 @@ class ReActAgent:
             run.refused = True
         run.latency_sec = time.time() - started
         return run
+
+    def _read_gate(self, answer: str) -> str:
+        """finish 前的欠召回护栏。返回空串表示放行。"""
+        if self.min_read <= 0:
+            return ""
+        compact = (answer or "").replace(" ", "")
+        if self.refusal_text.replace(" ", "") in compact:
+            return ""  # 拒答是合理终局，不强求继续读
+        selected = [e for e in self.evidence if e.selected]
+        if len(selected) >= self.min_read:
+            return ""
+        unread = [e.eid for e in self.evidence if not e.selected]
+        if not unread:
+            return ""
+        return (
+            f"你只读了 {len(selected)} 条片段，未达下限 {self.min_read} 条，"
+            f"请用 read 补读（未读编号：{unread[:8]}）后再 finish。"
+        )
 
     def _context_block(self) -> str:
         ctx = self._contexts()
@@ -491,6 +519,7 @@ def make_agent(
     max_steps: int = 6,
     budget_chars: int = 2400,
     max_parse_retries: int = 2,
+    min_read: int = 0,
 ) -> tuple[ReActAgent, Dict[str, Any]]:
     """构造 Agent 并把工作集注入工具闭包。"""
     tools, state = build_tools(
@@ -505,6 +534,7 @@ def make_agent(
         max_steps=max_steps,
         budget_chars=budget_chars,
         max_parse_retries=max_parse_retries,
+        min_read=min_read,
     )
     state["evidence_owner"] = agent
     return agent, state

@@ -79,6 +79,12 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--ids", default="")
     ap.add_argument("--max-steps", type=int, default=6)
+    ap.add_argument(
+        "--min-read",
+        type=int,
+        default=0,
+        help="finish 前至少读入多少条片段（欠召回护栏，0 表示不设限）",
+    )
     ap.add_argument("--budget", type=int, default=2400)
     ap.add_argument("--top-k", type=int, default=8)
     ap.add_argument("--candidate-k", type=int, default=40)
@@ -145,6 +151,7 @@ def main() -> int:
                 reranker=reranker,
                 max_steps=args.max_steps,
                 budget_chars=args.budget,
+                min_read=args.min_read,
             )
             run = agent.run(item["question"])
             row = run.to_dict()

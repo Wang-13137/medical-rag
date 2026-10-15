@@ -255,6 +255,31 @@ def test_bare_ids_are_aligned_to_read():
     assert len(run.contexts) == 2
 
 
+def test_min_read_gate_blocks_premature_finish():
+    retriever = FakeRetriever([_hit("甲。"), _hit("乙。"), _hit("丙。")])
+    chat = _scripted(
+        [
+            "行动：vector_search\n行动输入：query=甲乙丙, top_k=3",
+            "行动：finish\n行动输入：answer=甲[1]。",
+            "行动：read\n行动输入：ids=1,2,3",
+            "行动：finish\n行动输入：answer=甲[1]乙[2]丙[3]。",
+        ]
+    )
+    agent, _ = make_agent(chat, retriever, min_read=3)
+    run = agent.run("甲乙丙")
+    assert "未达下限" in run.steps[1].observation
+    assert run.answer.endswith("丙[3]。")
+    assert len(run.contexts) == 3
+
+
+def test_min_read_gate_allows_refusal():
+    chat = _scripted(["行动：finish\n行动输入：answer=根据提供的指南片段无法回答该问题。"])
+    agent, _ = make_agent(chat, FakeRetriever([]), min_read=5)
+    run = agent.run("语料里没有的问题")
+    assert run.refused is True
+    assert run.stop_reason == "finish"
+
+
 def test_run_serialisable():
     chat = _scripted(["行动：finish\n行动输入：answer=甲[1]。"])
     agent, _ = make_agent(chat, FakeRetriever([]))
