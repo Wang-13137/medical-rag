@@ -1,10 +1,24 @@
-# 中文医疗知识库 RAG 系统（W1 阶段）
+# 中文医疗知识库 RAG 系统（W1–W5）
 
-面向 2027 届校招算法岗的转码作品集项目。整个项目的差异化不在「能问答」，而在配套一套可量化的评测体系（准确率、幻觉率、拒答正确率）。本仓库截至当前只实现 W1：文档解析、切片、向量化、FAISS 检索基线。
+面向 2027 届校招算法岗的转码作品集项目。差异化不在「能问答」，而在配套一套可量化的评测体系，
+以及**把负结果也测出来并写下来**：BM25 混合检索在本语料上是负收益、生成后蕴含校验闸门对强提示词是负收益、
+ReAct 智能体在 100 题上显著低于固定流水线。所有数字都在 `reports/` 里有出处。
+
+## 零、五个阶段与一句话结论
+
+| 阶段 | 做了什么 | 一句话结论 | 累计测试 |
+|---|---|---|---|
+| W1 | 解析、切片、向量化、FAISS 基线 | 文档级 Recall@1 已饱和，必须换更细粒度的指标 | — |
+| W2 | 语料清洗、四种检索横评、100 题评测集 | cross-encoder 精排是唯一正向收益；BM25 两种用法都是负收益 | 53 |
+| W3 | 受限生成、引用标注、幻觉与拒答评测 | RAG 较闭卷 +0.696；瓶颈在检索不在生成 | 74 |
+| W4 | 句边界切片、逐句蕴含校验闸门 | 切片方向为正未达显著；闸门只对弱约束生成有价值 | 96 |
+| W5 | 手写 ReAct 智能体层 | Agent 召回 0.649 低于流水线 0.814（p=0.0009），根因欠召回 | 117 |
+
+每个阶段的详细结论分别在第十三（W1–W2 评测）、第十五（W3）、第十六（W4）、第十七（W5）节。
 
 ---
 
-## 一、本阶段已完成什么
+## 一、已完成什么
 
 | 模块 | 文件 | 职责 |
 | --- | --- | --- |
@@ -21,8 +35,10 @@
 | 评测集 | `scripts/build_benchmark.py`、`scripts/eval_benchmark.py`、`data/eval/benchmark_v1.json` | 100 条带标准答案的评测集：构建 + 原文校验，以及在上面跑 baseline（详见第十三节） |
 | 生成 | `src/medical_rag/generate.py` | 受限提示词的答案合成，强制引用编号与无依据时拒答；内置离线替身 `EchoGenerator` |
 | 生成评测 | `scripts/run_generation.py`、`scripts/eval_generation.py` | 在 benchmark 上批量生成并评测正确性、引用可溯源性、语境支持度、拒答权衡 |
+| 蕴含校验 | `src/medical_rag/verify.py`、`scripts/calibrate_verifier.py`、`scripts/apply_verifier.py` | 生成后逐句校验：数字溯源 + 字面覆盖；阈值由合成污染样本标定（第十六.2） |
+| 智能体层 | `src/medical_rag/agent.py`、`scripts/run_agent.py` | 手写 ReAct 主循环，把检索/精排/校验暴露为工具，带步数、预算、欠召回护栏（第十七节） |
 
-**未完成（后续阶段）**：Gradio 演示界面、FastAPI 服务化、把「Constraint Decoding」式的 hallucination 拦截做成硬闸门。
+**未完成**：Gradio 演示界面、FastAPI 服务化、情境元数据过滤（第十四节第 5 条）、留出验证（第 8 条）。
 
 ---
 
@@ -590,7 +606,8 @@ python scripts/build_index.py     # 读 data/raw，写 data/index/faiss_main.ind
 
 ## 十四、已知限制
 
-1. **切片只用字符数，不做句边界对齐**：滑窗按字符切，长句会被拦腰截断。这不是理论担忧——benchmark v1 里剩余 8 条未全中的题有 6 条文档找对了却答不全，根因就是这个（见第十三.6）。下一步按句队列打包，让每个切片自然收尾在句末。
+1. **已修复（W4）~~切片不做句边界对齐~~**：已改为句边界对齐（第十六节），长句不再被截断，
+   但召回提升未达显著。第十三.6 那 6 条「文档找对却答不全」的问题是这次改动的目标，仍未彻底解决。
 2. **跨页 Section 只记起始页码**：一个标题下的正文跨多页时，页码取第一页。后续可在 Section 内存 `page_range`。
 3. **PDF 表格提取未处理**：pdfplumber 的表格数值目前混在正文里，排版较乱的表格会串行；没有 OCR，扫描件不可用。
 4. **参考文献区块没单独处理**：清洗脚本删掉了参考编号和「返回引文位置」这类样板，但参考文献的正文（英文期刊名、作者列表）仍在库里，会稀释密度。下一步可以按 `[参考文献]` 标题切断，单独存放或不入库。
@@ -602,14 +619,183 @@ python scripts/build_index.py     # 读 data/raw，写 data/index/faiss_main.ind
 8. **测试集与调优样本没有彻底隔离**：切片参数（第十三节的 300/60）是先用 10 条探针调出来的，
    这 10 条的主题与 benchmark 有少量重合（心衰、基层糖尿病）。数字整体可信，
    但严格来说应补一组留出验证：只用 benchmark 的子集调参，在另一个从未参与调参的子集上确认。
-9. **生成模块还没有接入**：目前只有检索结果，没有答案合成、没有引用标注、没有幻觉率统计。
+9. **已解决（W3）~~生成模块还没接入~~**：已有受限生成、引用标注、幻觉与拒答评测（第十五节）。
+   但评测口径是「关键串是否出现在答案里」，不是完整答案正确性；真正的事实一致性只有
+   LLM-judge（`eval_generation.py --judge`）和第十五.4 的语境支持度两条近似路径。
 10. **Windows 终端编码**：`scripts/` 下脚本已把 stdout 重设为 UTF-8，若仍出现乱码，执行前加 `$env:PYTHONIOENCODING = "utf-8"`。
 11. **重排模型是 2.2GB 的外部资源**：`bge-reranker-base` 走 ModelScope 下载到本地缓存，脚本会从 `rerank.local_model_dir` 离线加载；没下载时 `--no-rerank` 依然可用，相关测试会自动跳过。
 
 ---
 
-## 十五、下一步（W2 后半 ~ W3）
+## 十五、生成端（W3）：受限提示词、引用标注与幻觉评测
 
-1. **按句边界重做切片**：直接针对第十三.6 的根因——长推荐句跨切片导致答案落在相邻切片。做法是把行按句末标点打包后再滑窗，让切片自然收尾在句末。预期能补回剩余 8 条硬骨头中的一部分。
-2. **接 DeepSeek 生成**：带引用标注的答案合成，每条答案必须能指出来源切片。
-3. **幻觉率与拒答率评测**：在 benchmark v1 上统计「答案是否有原文支撑」「应拒答题是否真的拒答」，补齐第十三.7 里单靠检索分数解决不了的那部分。
+### 15.1 四档提示词，用来回答「RAG 到底贡献了多少」
+
+| 档位 | 检索 | 提示词约束 | 用途 |
+|---|---|---|---|
+| `strict` | 有 | 逐句必标 `[n]`、无依据必须拒答 | 主口径 |
+| `strict_v2` | 有 | 放宽拒答措辞 | 对照（见 15.3） |
+| `naive` | 有 | 不给任何约束 | 无约束对照 |
+| `closed-book` | 无 | 同 strict | 闭卷对照，量化「检索值多少」 |
+
+生成走 `httpx` 直连 DeepSeek（不引 SDK），密钥只从环境变量 `DEEPSEEK_API_KEY` 读取；
+`EchoGenerator` 是离线替身，让链路在没有密钥时也能测。
+
+### 15.2 100 题结果（同一评测集，逐题配对）
+
+| 指标 | strict v1 | naive | closed-book |
+|---|---|---|---|
+| 关键串召回 | **0.8137** | 0.5706 | 0.1176 |
+| 全中率 | 0.7647 | — | 0.0353 |
+| 引用精确率 | **0.7657** | 0.012 | — |
+| 可答题误拒率 | 0.0941 | — | — |
+| 应拒答题正确拒答率 | **1.0000** | 0.267 | — |
+
+- strict vs naive：**+0.243**，bootstrap 95%CI **[0.159, 0.331]**，McNemar b=26 / c=1，p<0.001
+- RAG vs 闭卷：**+0.696**，CI [0.608, 0.778]，p<0.0001 —— 闭卷几乎写不出任何可核验的关键串
+- 闭卷的「语境支持度」恒等于 1 是定义使然（它不引用任何片段），**不可与 RAG 横向比较**
+
+### 15.3 负结果一：提示词 v2 不算更好
+
+v2 把误拒率从 9.4% 降到 5.9%，但召回从 0.814 掉到 0.782，McNemar **p=0.219**，统计上不可区分。
+结论按 v1 口径锁死，v2 只作为已尝试并否决的路径记录在 `reports/generation_compare_v2_vs_v1.json`。
+
+### 15.4 负结果二：瓶颈在检索，不在生成
+
+8 条误拒里有 **6 条检索召回为 0** —— 那种情况下拒答才是正确行为，只有 QA029 / QA073 是真损失。
+按检索结果分层看：检索全中的 77 条上生成召回 0.892，检索失败的 7 条几乎全废。
+
+---
+
+## 十六、W4：句边界切片与逐句蕴含校验闸门
+
+### 16.1 句边界对齐切片（针对第十三.6 的根因）
+
+`chunking.py` 先把正文按句末标点切句，再按整句打包滑窗，切点永远落在句末、重叠也按整句回退；
+单句超过 `hard_max_chars`（默认 800）才退回字符兜底。
+配置项 `chunking.sentence_aware`（默认 true），`build_index.py --char-window` 可退回旧字符滑窗做对照。
+注意 `split_sentences` **不把英文句点当句末**，否则会把 `14 d.` 这类剂量写法剖开。
+
+索引 6625 → **9404** 片（平均 241 字符）。等预算 2400 下：
+
+| | 字符滑窗 | 句边界对齐 |
+|---|---|---|
+| 关键串召回 | 0.9118 | **0.9412** |
+| 全中率 | 0.9059 | **0.9294** |
+| doc_hit@1 | 0.9647 | 0.9770 |
+
+**但 85 题配对 McNemar p=0.625、bootstrap CI [-0.0059, +0.0765] 跨 0**，
+所以只能记为「方向为正、未达显著」，不能写成提升。
+
+### 16.2 生成后逐句蕴含校验闸门（`verify.py`）
+
+两条判据：**数字溯源**（句内每个数字必须能在依据里逐字找到）+ **字符 3-gram 字面覆盖**。
+关键设计是判「编造」时用**全部**上下文，判「引用准不准」时才用被引用片段——
+早期版本混用导致正样本误报 23%，因为把「引用标错位置」误判成了幻觉。
+再加上非事实句豁免（引导语、拒答句、短标题），误报降到 **6.5%**。
+
+阈值由合成污染样本标定（`calibrate_verifier.py`，数字篡改 + 句子嫁换）：
+
+| 阈值 | 正样本误报 | 数字型幻觉检出 | 叙述型检出 |
+|---|---|---|---|
+| 0.60（采用） | 6.5% | 91.0% | 100% |
+| 0.85 | 23.1% | 97.5% | — |
+
+**回测是负结果为主**：strict 下无依据数字率本来就只有 0.0118，闸门改了 10% 的答案，
+却使召回 0.8137 → 0.7961，还把 QA034 整体误杀；naive 下把 0.0138 清到 0，代价是召回 -0.0353。
+结论：闸门对**弱约束**生成价值明确，对**已收敛的强提示词**是负收益。
+
+---
+
+## 十七、ReAct 智能体层（W5）
+
+### 17.1 为什么要手写
+
+`src/medical_rag/agent.py` 不引任何 Agent 框架，主循环只有 Thought / Action / Action Input 三段纯文本解析。
+好处是每一步的工具调用、预算消耗、解析失败都能被单元测试精确覆盖，也能回答「ReAct 到底多了什么开销」。
+工具就是检索系统已有的能力，Agent 只决定**什么时候用哪一个**：
+
+`vector_search` / `keyword_search`（BM25，默认不暴露）/ `rerank` / `read`（读入片段并计入引用编号）/
+`remember`（中间结论记忆）/ `verify`（调用 16.2 的蕴含校验）/ `finish`
+
+护栏：步数上限（超步退化为拒答）、上下文预算、解析失败回喂格式要求、
+参数名兜底对齐（模型把 `finish` 输入写成裸文本时不报错）。
+
+### 17.2 100 题对照：Agent 显著低于流水线
+
+| | 关键串召回 | 全中率 | 误拒率 | 应拒答正确率 | 上下文用量 | 调用次数 |
+|---|---|---|---|---|---|---|
+| 流水线（strict） | **0.8137** | 0.7647 | 0.0941 | 1.0000 | 2169 字 | 1 |
+| Agent 基线 | 0.5824 | 0.4941 | 0.1882 | 1.0000 | 638 字 | 4.01 |
+| Agent + min_read=5 | 0.6490 | 0.5647 | 0.1294 | 0.8667 | 1625 字 | 5.53 |
+
+- 基线 Agent vs 流水线：**-0.2314**，CI [-0.3529, -0.1098]，全中率 **McNemar p=0.00002**（Agent 赢 3、流水线赢 26）
+- 护栏版 vs 流水线：**-0.1647**，CI [-0.2863, -0.0451]，**p=0.0009** —— 仍然显著落后
+- 护栏 vs 基线：+0.0667，CI [-0.0667, +0.1961] 跨 0，**p=0.146**，只能记为趋势
+
+### 17.3 根因是欠召回，不是推理不行
+
+Agent 平均只读 **2.11 条**片段就 `finish`，流水线固定塞满 8 条。
+它省下来的 71% 上下文，本质上是**没读进去的证据**。
+加 `min_read=5` 护栏后读到 5.43 条、上下文涨到 1625 字，召回只回来 0.067，
+而且副作用是应拒答正确率从 1.0000 掉到 **0.8667**——被逼着多读之后，模型开始对着不相关片段硬答。
+
+**一句话结论：在这份指南语料上，「让模型自己决定读几条」不如「固定塞满 8 条」。
+Agent 的价值不在召回，而在可控性（护栏、可干预、可拒绝）。**
+
+---
+
+## 十八、复现命令速查
+
+```powershell
+$env:PYTHONIOENCODING = "utf-8"
+
+# W1 语料清洗 + 建索引（默认句边界对齐；--char-window 退回字符滑窗）
+python scripts/clean_corpus.py
+python scripts/build_index.py
+
+# W2 检索评测（等上下文预算 2400 / Top-8 / 精排候选 40）
+python scripts/eval_benchmark.py --out reports/benchmark_eval_rerank.json
+python scripts/eval_benchmark.py --no-rerank --out reports/benchmark_eval_vector.json
+python scripts/eval_benchmark.py --index-path data/index/faiss_sent.index `
+  --meta-path data/index/chunks_sent.json --out reports/benchmark_eval_sent_rerank.json
+
+# W3 生成（四档）与评测
+python scripts/run_generation.py --prompt-mode strict
+python scripts/run_generation.py --prompt-mode naive
+python scripts/run_generation.py --prompt-mode closed-book     # 不加载索引，跑得快
+python scripts/eval_generation.py data/generated/generation_strict.jsonl `
+  data/generated/generation_naive.jsonl --out reports/generation_eval.json
+python scripts/compare_generation.py data/generated/generation_strict.jsonl `
+  data/generated/generation_naive.jsonl
+
+# W4 蕴含校验：标定阈值 + 离线回测
+python scripts/calibrate_verifier.py
+python scripts/apply_verifier.py --mode prune
+python scripts/apply_verifier.py --generated data/generated/generation_naive.jsonl --mode prune
+
+# W5 Agent
+python scripts/run_agent.py --offline --limit 3 --out data/generated/agent_smoke.jsonl  # 链路冒烟
+python scripts/run_agent.py --out data/generated/agent_react.jsonl                      # 在线基线
+python scripts/run_agent.py --min-read 5 --max-steps 8 --out data/generated/agent_react_minread5.jsonl
+python scripts/eval_generation.py data/generated/agent_react_minread5.jsonl `
+  data/generated/agent_react.jsonl data/generated/generation_strict.jsonl `
+  --out reports/generation_eval_agent_minread5.json
+
+# 测试（117 项）
+python -m pytest tests/ -q
+```
+
+评测报告全部落在 `reports/`，生成结果落在 `data/generated/`（已在 `.gitignore` 中，不入库）。
+
+---
+
+## 十九、下一步
+
+1. **给「读出证据」设更强的下限**：17.3 说明欠召回是主因，下一步不是再放宽护栏，
+   而是把「读几条」从模型自由裁量改成由**检索分数的下降曲线**自动决定（分数断崖处截断）。
+2. **情境元数据过滤**：在今天 README 第 5 条那条「慢性心衰查到急性心衰」上加 `情境` 字段，做硬过滤。
+3. **把延迟做成一等公民**：Agent 每题 4~5.5 次调用、7~22 秒的成本已经量化，
+   下一步做调用合并（一次读完而不是逐轮读），并用同样的 100 题验证延迟下降不牺牲召回。
+4. **Gradio 演示**：把检索 → 精排 → 引用答案 → 拒答闸门四步可视化，顺带作为交付物门面。
+5. **留出验证**：补一组从未参与调参的 benchmark 子集，回应第 8 条限制。
